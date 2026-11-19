@@ -1,0 +1,41 @@
+---
+title: "Query usage and reports"
+description: "Use scoped project keys to read estimated spend, end-user usage, and weekly reports."
+---
+
+An organization owner can [create a project read key](/api-reference/create-api-key) using a dashboard access JWT. Choose the scopes the integration needs. Keys expire after 90 days by default. You can set an expiry of 1 to 365 days. Store the returned `brl_read_` secret when you create the key.
+
+| Query | Scope |
+| --- | --- |
+| [Estimated spend](/api-reference/spend) | `spend:read` |
+| [End users with matching activity](/api-reference/end-users) | `end_users:read` |
+| [Weekly reports](/api-reference/reports) and [PDF downloads](/api-reference/report-pdf) | `reports:read` |
+
+Set `BRELLO_API_ORIGIN` to your API origin without a path and `BRELLO_READ_KEY` to a key with `spend:read`.
+
+~~~bash
+curl --get "$BRELLO_API_ORIGIN/v1/spend" \
+  --header "Authorization: Bearer $BRELLO_READ_KEY" \
+  --data-urlencode "environment=live" \
+  --data-urlencode "groupBy=model"
+~~~
+
+## Filters and pagination
+
+Spend and end-user queries intersect all filters. Supply `from` and `to` as UTC dates in `YYYY-MM-DD` format. The start is inclusive and the end is exclusive, with a maximum span of 366 days. By default, `to` is the next UTC midnight and `from` is 30 days before `to`. The default `environment=all` includes live and test events.
+
+For spend, `groupBy` defaults to `day`. Use `key` to group by Brello ingestion key or `providerKey` to group by the provider credential's SHA-256 fingerprint. Missing fingerprints form a `null` group. Model groups use `provider:model`. The `endUserId` filter takes a Brello UUID. Use `externalId` in end-user results to identify the corresponding application user.
+
+Use `limit` from 1 to 100 (default 50) and `offset` from 0 to 10,000 (default 0). When `pagination.hasMore` is true, advance `offset` by `limit` within that range. The report archive accepts only these pagination parameters.
+
+## Cost estimates
+
+Costs come from SDK usage and are expressed as decimal strings in micro-USD. One USD equals 1,000,000 micro-USD. Request counts are also decimal strings. Use `knownEstimatedCostMicros` for the priced subset. If any request is unpriced, `estimatedCostMicros` is `null` and `unpricedRequestCount` records how many requests lack a price.
+
+## Weekly reports
+
+Reports are immutable snapshots for completed Monday-to-Monday UTC weeks, based on live SDK usage. The latest report returns `404` until a snapshot exists. The report and its PDF use the same stored snapshot. Send a read key with `reports:read` when following a report URL or downloading its PDF.
+
+## Errors and retries
+
+A `401` means the key cannot authenticate. A `403` means the key lacks the required scope. Reads allow 120 requests per minute per key per server process. For `429` and `503`, use `Retry-After` in seconds and bound your retries. Responses use `Cache-Control: no-store`. Error responses include a request ID.

@@ -1,0 +1,43 @@
+---
+title: "Receive webhooks"
+description: "Subscribe to report and alert events and verify incoming signatures."
+---
+
+| Event | Trigger |
+| --- | --- |
+| [`report.ready`](/api-reference/report-ready) | A weekly report snapshot is ready |
+| [`alert.abuse`](/api-reference/alert-abuse) | Usage matches an abuse alert rule |
+| [`alert.model_change`](/api-reference/alert-model-change) | A published model change matches recent live usage |
+
+## Set up a destination
+
+1. Use an organization owner's dashboard access JWT to send `POST /api/organizations/{organizationId}/notifications/destinations` with the JSON body below. Use a public HTTPS URL on port 443. Brello does not follow redirects.
+2. Save the returned `signingSecret` immediately. Brello returns it only when you create the destination.
+3. Use the returned destination ID to [set a project subscription](/api-reference/set-webhook-subscription). Send an `eventTypes` array containing the events you want to receive. Keep the destination enabled.
+
+~~~json
+{
+  "channel": "webhook",
+  "label": "My service",
+  "target": "https://example.com/hooks/brello"
+}
+~~~
+
+Brello starts delivering new matching events after activation. Updating a subscription resets activation and cancels pending deliveries under its previous settings. Send an empty `eventTypes` array to disable the subscription.
+
+## Verify incoming requests
+
+| Header | Value |
+| --- | --- |
+| `Brello-Event-Id` | UUID that stays the same across delivery attempts |
+| `Brello-Timestamp` | Delivery timestamp as Unix seconds |
+| `Brello-Signature` | `v1=` followed by 64 lowercase hexadecimal characters |
+
+1. Read the raw request body before parsing JSON. Reject timestamps more than 300 seconds ahead of or behind your clock.
+2. Compute HMAC-SHA256 over the timestamp header, a literal period, and the exact raw UTF-8 body bytes. Use the `signingSecret` string as the HMAC key without Base64URL decoding it.
+3. Compare the lowercase hex digest to the value after `v1=` using a constant-time comparison. Reject requests if the signature fails verification.
+4. Parse the verified body and check that its `eventId` matches `Brello-Event-Id`. Deduplicate using the body’s `eventId`. Return `2xx` once you have durably accepted that event ID, including when you receive it again.
+
+## Handle retries
+
+Brello retries network failures, `429`, and `5xx` responses with exponential backoff, up to eight attempts within 23 hours. Other non-`2xx` statuses terminate delivery. The timestamp and signature change for each attempt. The event ID and JSON body stay the same. Your receiver may get duplicate or out-of-order deliveries.

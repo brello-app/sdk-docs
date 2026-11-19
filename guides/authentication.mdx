@@ -1,9 +1,15 @@
 ---
 title: "Authentication"
-description: "Authenticate ingestion and configuration requests with a project API key."
+description: "Choose the credential for ingestion, read queries, or project management."
 ---
 
-Send your complete project key in the Authorization header:
+| Operation | Bearer credential |
+| --- | --- |
+| Send SDK events or fetch SDK configuration under `/v1` | Project ingestion key |
+| Query spend, end users, or reports under `/v1` | Project read key with the [required scope](/guides/read-api) |
+| Manage read keys or webhook subscriptions under `/api` | Dashboard access JWT from an organization owner |
+
+For ingestion and configuration, send your complete project key in the `Authorization` header.
 
 ~~~http
 Authorization: Bearer YOUR_PROJECT_API_KEY

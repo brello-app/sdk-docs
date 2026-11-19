@@ -1,32 +1,17 @@
 ---
 title: "API overview"
-description: "Public endpoints, shared behavior, and the downloadable OpenAPI contract."
+description: "Explore ingestion, scoped reads, project management, and signed webhook events."
 ---
 
-| Property | Value |
-| --- | --- |
-| API version | `1.0.0-beta.2` |
-| OpenAPI version | `3.0.0` |
-| Base path | `/v1` |
-| Authentication | Project key as HTTP Bearer |
-| Request encoding | Uncompressed JSON |
+The [Brello Public API specification](/openapi.json) is version `1.0.0-beta.3` and uses OpenAPI `3.1.0`. Fetch it from a running backend at `GET /v1/openapi-public.json`. SDK tooling can still fetch the ingestion-only OpenAPI 3.0 document at `GET /v1/openapi.json`.
 
-Use your API deployment origin plus `/v1`. Local development defaults to `http://localhost:8000/v1`. The OpenAPI file uses the relative server URL `/v1`.
+Use your Brello API origin, which defaults to `http://localhost:8000` in local development. The OpenAPI document uses relative server URLs.
 
-| Method | Path | Purpose |
+| Area | Base path or destination | Authentication |
 | --- | --- | --- |
-| POST | [`/v1/events`](/api-reference/events) | Submit completed provider attempts |
-| GET | [`/v1/config`](/api-reference/config) | Verify a key and fetch settings |
-| GET | `/v1/openapi.json` | Fetch the running server's public specification, without authentication |
+| [SDK ingestion](/api-reference/events) and [configuration](/api-reference/config) | `/v1` | Project ingestion key |
+| [Spend](/api-reference/spend), [end users](/api-reference/end-users), and [reports](/api-reference/reports) | `/v1` | Scoped project read key |
+| [Read keys](/api-reference/list-api-keys) and [subscriptions](/api-reference/list-webhook-subscriptions) | `/api` | Organization owner dashboard access JWT |
+| [Outgoing webhooks](/guides/webhooks) | Your configured HTTPS endpoint | Brello signature verified with the destination secret |
 
-Mintlify builds the endpoint reference from the [OpenAPI specification](/openapi.json).
-
-<Note>
-The playground is disabled while the specification uses a relative API URL. Use curl or a language guide with your deployment URL.
-</Note>
-
-## Shared response behavior
-
-The public router sets `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, and a request identifier. Error envelopes include `requestId`. Authentication failures return `WWW-Authenticate: Bearer`. Retryable responses use `Retry-After` in seconds.
-
-Read [authentication](/guides/authentication), [event semantics](/guides/events), and [errors and limits](/guides/errors) before building a client.
+For SDK ingestion, see the [quickstart](/quickstart) and [retry guide](/guides/errors). For read queries, see [filters and pagination](/guides/read-api).

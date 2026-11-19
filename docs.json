@@ -20,6 +20,10 @@
           {
             "group": "Send usage data",
             "pages": ["guides/events", "guides/end-users", "guides/privacy", "guides/errors"]
+          },
+          {
+            "group": "Build integrations",
+            "pages": ["guides/read-api", "guides/webhooks"]
           }
         ]
       },
@@ -29,6 +33,18 @@
           {
             "group": "SDK API",
             "pages": ["api-reference/introduction", "api-reference/events", "api-reference/config"]
+          },
+          {
+            "group": "Read API",
+            "pages": ["api-reference/spend", "api-reference/end-users", "api-reference/reports", "api-reference/latest-report", "api-reference/report", "api-reference/report-pdf"]
+          },
+          {
+            "group": "Project management",
+            "pages": ["api-reference/list-api-keys", "api-reference/create-api-key", "api-reference/revoke-api-key", "api-reference/list-webhook-subscriptions", "api-reference/set-webhook-subscription"]
+          },
+          {
+            "group": "Webhook events",
+            "pages": ["api-reference/report-ready", "api-reference/alert-abuse", "api-reference/alert-model-change"]
           }
         ]
       }

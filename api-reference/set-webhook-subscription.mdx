@@ -1,0 +1,8 @@
+---
+title: "Set a webhook subscription"
+openapi: "/openapi.json PUT /projects/{projectId}/webhook-subscriptions/{destinationId}"
+---
+
+Send the organization owner's dashboard access JWT to `/api/projects/{projectId}/webhook-subscriptions/{destinationId}`. Use a destination from the same organization. Send `{"eventTypes": []}` to disable a subscription.
+
+See [Receive webhooks](/guides/webhooks) to create a destination and verify deliveries.

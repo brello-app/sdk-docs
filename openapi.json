@@ -1,9 +1,9 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
-    "title": "Brello SDK API",
-    "version": "1.0.0-beta.2",
-    "description": "Public write-only SDK ingestion and minimal configuration. Dashboard APIs are excluded."
+    "title": "Brello Public API",
+    "version": "1.0.0-beta.3",
+    "description": "Public SDK ingestion, scoped read endpoints, API key lifecycle, and outgoing signed webhooks. Read spend is SDK estimated cost; it is not a complete provider invoice. SDK content is not collected."
   },
   "servers": [
     {
@@ -16,9 +16,366 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "brl_live_ / brl_test_ (legacy brello_ accepted)"
+      },
+      "publicApiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "brl_read_<43 Base64URL characters>"
+      },
+      "dashboardSession": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Dashboard access JWT"
       }
     },
     "schemas": {
+      "ReportReadyWebhook": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "report.ready"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/WeeklyReport"
+          }
+        },
+        "required": [
+          "eventId",
+          "occurredAt",
+          "event",
+          "data"
+        ]
+      },
+      "WeeklyReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "date"
+              },
+              "to": {
+                "type": "string",
+                "format": "date"
+              },
+              "timeZone": {
+                "type": "string",
+                "enum": [
+                  "UTC"
+                ]
+              },
+              "endExclusive": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "timeZone",
+              "endExclusive"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "total": {
+            "$ref": "#/components/schemas/PublicCostSummary"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "pdfUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "period",
+          "createdAt",
+          "total",
+          "summary",
+          "url",
+          "pdfUrl"
+        ]
+      },
+      "PublicCostSummary": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "costSource": {
+            "type": "string",
+            "enum": [
+              "sdk_estimate"
+            ]
+          },
+          "requestCount": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "knownEstimatedCostMicros": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "estimatedCostMicros": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d+$"
+          },
+          "unpricedRequestCount": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          }
+        },
+        "required": [
+          "currency",
+          "costSource",
+          "requestCount",
+          "knownEstimatedCostMicros",
+          "estimatedCostMicros",
+          "unpricedRequestCount"
+        ]
+      },
+      "AbuseAlertWebhook": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "alert.abuse"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "alertId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "endUserId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "externalUserId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "median",
+                  "limit"
+                ]
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD"
+                ]
+              },
+              "amountMicros": {
+                "type": "string",
+                "pattern": "^\\d+$"
+              },
+              "thresholdMicros": {
+                "type": "string",
+                "pattern": "^\\d+$"
+              },
+              "period": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "enum": [
+                      "UTC"
+                    ]
+                  },
+                  "endExclusive": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "timeZone",
+                  "endExclusive"
+                ]
+              }
+            },
+            "required": [
+              "projectId",
+              "alertId",
+              "endUserId",
+              "externalUserId",
+              "rule",
+              "currency",
+              "amountMicros",
+              "thresholdMicros",
+              "period"
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "occurredAt",
+          "event",
+          "data"
+        ]
+      },
+      "ModelChangeWebhook": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "alert.model_change"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "changeId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "provider": {
+                "type": "string"
+              },
+              "changeType": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "sourceUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "effectiveAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "modelIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "affectedRequestCount": {
+                "type": "string",
+                "pattern": "^\\d+$"
+              },
+              "knownEstimatedCostMicros": {
+                "type": "string",
+                "pattern": "^\\d+$"
+              },
+              "unpricedRequestCount": {
+                "type": "string",
+                "pattern": "^\\d+$"
+              }
+            },
+            "required": [
+              "projectId",
+              "changeId",
+              "provider",
+              "changeType",
+              "title",
+              "description",
+              "sourceUrl",
+              "effectiveAt",
+              "modelIds",
+              "affectedRequestCount",
+              "knownEstimatedCostMicros",
+              "unpricedRequestCount"
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "occurredAt",
+          "event",
+          "data"
+        ]
+      },
       "BatchReceipt": {
         "type": "object",
         "properties": {
@@ -441,8 +798,10 @@
         "description": "Legacy project-scoped HMAC identity. It is kept separate from supplied IDs and names."
       },
       "TokenUsage": {
-        "type": "object",
-        "nullable": true,
+        "type": [
+          "object",
+          "null"
+        ],
         "properties": {
           "inputTokens": {
             "type": "integer",
@@ -584,8 +943,10 @@
                 "type": "object",
                 "properties": {
                   "endUser": {
-                    "type": "object",
-                    "nullable": true,
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "algorithm": {
                         "type": "string",
@@ -640,6 +1001,159 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "PublicApiError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "requestId"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "PublicApiKeyMetadata": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "spend:read",
+                "reports:read",
+                "end_users:read"
+              ]
+            }
+          },
+          "keyLastFour": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "revokedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "name",
+          "scopes",
+          "keyLastFour",
+          "createdAt",
+          "expiresAt",
+          "revokedAt",
+          "lastUsedAt"
+        ]
+      },
+      "CreatePublicApiKey": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "spend:read",
+                "reports:read",
+                "end_users:read"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 3
+          },
+          "expiresInDays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 365,
+            "default": 90
+          }
+        },
+        "required": [
+          "name",
+          "scopes"
+        ],
+        "additionalProperties": false
+      },
+      "WebhookSubscription": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "report.ready",
+                "alert.abuse",
+                "alert.model_change"
+              ]
+            }
+          },
+          "activatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectId",
+          "destinationId",
+          "eventTypes",
+          "activatedAt"
         ]
       }
     },
@@ -842,6 +1356,2183 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/spend": {
+      "get": {
+        "operationId": "getSpend",
+        "tags": [
+          "Spend"
+        ],
+        "security": [
+          {
+            "publicApiKey": []
+          }
+        ],
+        "summary": "Query SDK estimated spend",
+        "description": "Requires spend:read. Filters are intersected. UTC dates use an exclusive end, at most 366 days apart. key groups and sdkKeyId refer to Brello ingestion keys, not provider secrets. Unattributed SDK user/feature dimensions are null. This is SDK estimated usage, not the complete provider invoice.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "live",
+                "test"
+              ],
+              "default": "all"
+            },
+            "required": false,
+            "name": "environment",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "openai",
+                "anthropic"
+              ]
+            },
+            "required": false,
+            "name": "provider",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "required": false,
+            "name": "model",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "sdkKeyId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "endUserId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "required": false,
+            "name": "providerKeyFingerprint",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "required": false,
+            "name": "feature",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "model",
+                "key",
+                "providerKey",
+                "endUser",
+                "feature",
+                "provider"
+              ],
+              "default": "day"
+            },
+            "required": false,
+            "name": "groupBy",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10000,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estimated spend. A null total means some requests could not be priced.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "projectId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "period": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "to": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "timeZone": {
+                              "type": "string",
+                              "enum": [
+                                "UTC"
+                              ]
+                            },
+                            "endExclusive": {
+                              "type": "boolean",
+                              "enum": [
+                                true
+                              ]
+                            }
+                          },
+                          "required": [
+                            "from",
+                            "to",
+                            "timeZone",
+                            "endExclusive"
+                          ]
+                        },
+                        "environment": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "live",
+                            "test"
+                          ]
+                        },
+                        "groupBy": {
+                          "type": "string",
+                          "enum": [
+                            "day",
+                            "model",
+                            "key",
+                            "providerKey",
+                            "endUser",
+                            "feature",
+                            "provider"
+                          ],
+                          "default": "day"
+                        },
+                        "total": {
+                          "$ref": "#/components/schemas/PublicCostSummary"
+                        },
+                        "groups": {
+                          "type": "array",
+                          "items": {
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/PublicCostSummary"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "dimension": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "dimension"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "number"
+                            },
+                            "offset": {
+                              "type": "number"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "offset",
+                            "hasMore"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "projectId",
+                        "period",
+                        "environment",
+                        "total",
+                        "groups",
+                        "pagination"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/end-users": {
+      "get": {
+        "operationId": "listEndUsers",
+        "tags": [
+          "End users"
+        ],
+        "security": [
+          {
+            "publicApiKey": []
+          }
+        ],
+        "summary": "List end users with usage in a period",
+        "description": "Requires end_users:read. endUserId is the internal Brello UUID; externalId is the supplied application ID. Only users with matching SDK activity are returned. Ordered by internal UUID.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "live",
+                "test"
+              ],
+              "default": "all"
+            },
+            "required": false,
+            "name": "environment",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "openai",
+                "anthropic"
+              ]
+            },
+            "required": false,
+            "name": "provider",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "required": false,
+            "name": "model",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "sdkKeyId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "endUserId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "required": false,
+            "name": "providerKeyFingerprint",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "required": false,
+            "name": "feature",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10000,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A project-scoped page of end users.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "projectId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "period": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "to": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "timeZone": {
+                              "type": "string",
+                              "enum": [
+                                "UTC"
+                              ]
+                            },
+                            "endExclusive": {
+                              "type": "boolean",
+                              "enum": [
+                                true
+                              ]
+                            }
+                          },
+                          "required": [
+                            "from",
+                            "to",
+                            "timeZone",
+                            "endExclusive"
+                          ]
+                        },
+                        "environment": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "live",
+                            "test"
+                          ]
+                        },
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/PublicCostSummary"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "externalId": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "name": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "identityKind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "id",
+                                      "name",
+                                      "hash"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "externalId",
+                                  "name",
+                                  "identityKind"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "number"
+                            },
+                            "offset": {
+                              "type": "number"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "offset",
+                            "hasMore"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "projectId",
+                        "period",
+                        "environment",
+                        "users",
+                        "pagination"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports": {
+      "get": {
+        "operationId": "listReports",
+        "tags": [
+          "Reports"
+        ],
+        "security": [
+          {
+            "publicApiKey": []
+          }
+        ],
+        "summary": "List archived weekly reports",
+        "description": "Requires reports:read. Immutable completed UTC week snapshots, newest first. Reports include live SDK events and explicitly expose unpriced requests; they do not represent final provider invoices.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10000,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A report archive page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "reports": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/WeeklyReport"
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "number"
+                            },
+                            "offset": {
+                              "type": "number"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "offset",
+                            "hasMore"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "reports",
+                        "pagination"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/latest": {
+      "get": {
+        "operationId": "getLatestReport",
+        "tags": [
+          "Reports"
+        ],
+        "security": [
+          {
+            "publicApiKey": []
+          }
+        ],
+        "summary": "Get the latest completed report",
+        "responses": {
+          "200": {
+            "description": "Latest report; requires reports:read. Returns 404 until a snapshot is generated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/WeeklyReport"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/{reportId}": {
+      "get": {
+        "operationId": "getReport",
+        "tags": [
+          "Reports"
+        ],
+        "security": [
+          {
+            "publicApiKey": []
+          }
+        ],
+        "summary": "Get an archived report",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "reportId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A report belonging to the key's project; requires reports:read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/WeeklyReport"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/{reportId}/pdf": {
+      "get": {
+        "operationId": "downloadReportPdf",
+        "tags": [
+          "Reports"
+        ],
+        "security": [
+          {
+            "publicApiKey": []
+          }
+        ],
+        "summary": "Download a report PDF",
+        "description": "Requires reports:read. Returns a one-page text PDF generated from the immutable snapshot. Download links require the same Bearer authentication; they are not public sharing links.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "reportId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report PDF",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/public-api-keys": {
+      "get": {
+        "servers": [
+          {
+            "url": "/api"
+          }
+        ],
+        "operationId": "listPublicApiKeys",
+        "tags": [
+          "API keys"
+        ],
+        "security": [
+          {
+            "dashboardSession": []
+          }
+        ],
+        "summary": "List public API keys",
+        "description": "Organization owner dashboard session required. Returns metadata only, up to 1000 keys, newest first.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API key metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PublicApiKeyMetadata"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "servers": [
+          {
+            "url": "/api"
+          }
+        ],
+        "operationId": "createPublicApiKey",
+        "tags": [
+          "API keys"
+        ],
+        "security": [
+          {
+            "dashboardSession": []
+          }
+        ],
+        "summary": "Issue a scoped read API key",
+        "description": "Organization owner dashboard session required. The brl_read_ secret is returned once. Default expiry is 90 days, maximum 365. Ingestion keys and dashboard JWTs cannot authenticate public read endpoints.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePublicApiKey"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Save the secret securely; it cannot be retrieved again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "$ref": "#/components/schemas/PublicApiKeyMetadata"
+                        },
+                        "secret": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "secret"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/public-api-keys/{keyId}": {
+      "delete": {
+        "servers": [
+          {
+            "url": "/api"
+          }
+        ],
+        "operationId": "revokePublicApiKey",
+        "tags": [
+          "API keys"
+        ],
+        "security": [
+          {
+            "dashboardSession": []
+          }
+        ],
+        "summary": "Revoke a public API key",
+        "description": "Organization owner dashboard session required. Revocation is idempotent and checked on every new read request.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "keyId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revoked key metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PublicApiKeyMetadata"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/webhook-subscriptions": {
+      "get": {
+        "servers": [
+          {
+            "url": "/api"
+          }
+        ],
+        "operationId": "listWebhookSubscriptions",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [
+          {
+            "dashboardSession": []
+          }
+        ],
+        "summary": "List project webhook subscriptions",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner-only webhook subscriptions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WebhookSubscription"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/webhook-subscriptions/{destinationId}": {
+      "put": {
+        "servers": [
+          {
+            "url": "/api"
+          }
+        ],
+        "operationId": "setWebhookSubscription",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [
+          {
+            "dashboardSession": []
+          }
+        ],
+        "summary": "Subscribe a webhook destination to project events",
+        "description": "Owner dashboard session required. First create a webhook destination through organization notification settings and save its one-time signingSecret. Only same-organization webhook destinations can subscribe. An empty eventTypes array disables this subscription and cancels pending public deliveries. Updating resets activation; historical events are not backfilled.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "destinationId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "eventTypes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "report.ready",
+                        "alert.abuse",
+                        "alert.model_change"
+                      ]
+                    },
+                    "maxItems": 3
+                  }
+                },
+                "required": [
+                  "eventTypes"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated subscription.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/WebhookSubscription"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or JSON. Fix the request before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, revoked, or suspended-issuer API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The API key does not contain the required scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in the authenticated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 16,384 bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after the indicated number of seconds.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable. Retry with bounded backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "report.ready": {
+      "post": {
+        "operationId": "report_ready",
+        "tags": [
+          "Webhook events"
+        ],
+        "summary": "report.ready",
+        "description": "Brello sends this request to subscribed HTTPS destinations. Verify HMAC-SHA256 using the destination secret over timestamp + '.' + the exact raw UTF-8 request body; the v1 signature is lowercase hex. Compare in constant time and reject timestamps more than 300 seconds from your clock. Deduplicate Brello-Event-Id. Return 2xx to acknowledge. Network errors, 429 and 5xx retry with exponential backoff (up to 8 attempts / 23 hours); other statuses fail permanently. Retry timestamps/signatures change; event ID and payload are stable. Subscriptions are opt-in and do not backfill old events.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "Brello-Event-Id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            },
+            "required": true,
+            "name": "Brello-Timestamp",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^v1=[a-f0-9]{64}$"
+            },
+            "required": true,
+            "name": "Brello-Signature",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportReadyWebhook"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Receiver acknowledged the event."
+          }
+        }
+      }
+    },
+    "alert.abuse": {
+      "post": {
+        "operationId": "alert_abuse",
+        "tags": [
+          "Webhook events"
+        ],
+        "summary": "alert.abuse",
+        "description": "Brello sends this request to subscribed HTTPS destinations. Verify HMAC-SHA256 using the destination secret over timestamp + '.' + the exact raw UTF-8 request body; the v1 signature is lowercase hex. Compare in constant time and reject timestamps more than 300 seconds from your clock. Deduplicate Brello-Event-Id. Return 2xx to acknowledge. Network errors, 429 and 5xx retry with exponential backoff (up to 8 attempts / 23 hours); other statuses fail permanently. Retry timestamps/signatures change; event ID and payload are stable. Subscriptions are opt-in and do not backfill old events.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "Brello-Event-Id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            },
+            "required": true,
+            "name": "Brello-Timestamp",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^v1=[a-f0-9]{64}$"
+            },
+            "required": true,
+            "name": "Brello-Signature",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbuseAlertWebhook"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Receiver acknowledged the event."
+          }
+        }
+      }
+    },
+    "alert.model_change": {
+      "post": {
+        "operationId": "alert_model_change",
+        "tags": [
+          "Webhook events"
+        ],
+        "summary": "alert.model_change",
+        "description": "Brello sends this request to subscribed HTTPS destinations. Verify HMAC-SHA256 using the destination secret over timestamp + '.' + the exact raw UTF-8 request body; the v1 signature is lowercase hex. Compare in constant time and reject timestamps more than 300 seconds from your clock. Deduplicate Brello-Event-Id. Return 2xx to acknowledge. Network errors, 429 and 5xx retry with exponential backoff (up to 8 attempts / 23 hours); other statuses fail permanently. Retry timestamps/signatures change; event ID and payload are stable. Subscriptions are opt-in and do not backfill old events.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "Brello-Event-Id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            },
+            "required": true,
+            "name": "Brello-Timestamp",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^v1=[a-f0-9]{64}$"
+            },
+            "required": true,
+            "name": "Brello-Signature",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelChangeWebhook"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Receiver acknowledged the event."
           }
         }
       }
