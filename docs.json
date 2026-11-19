@@ -1,34 +1,44 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "Brello",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#2e31ff",
+    "light": "#1f62ff",
+    "dark": "#2667ff"
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "pages": [
+    "tabs": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": ["index", "quickstart", "guides/authentication"]
+          },
+          {
+            "group": "Send usage data",
+            "pages": ["guides/events", "guides/end-users", "guides/privacy", "guides/errors"]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "groups": [
+          {
+            "group": "SDK API",
+            "pages": ["api-reference/introduction", "api-reference/events", "api-reference/config"]
+          }
         ]
       }
     ],
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Service status",
+          "href": "https://status.brello.app",
+          "icon": "signal"
         }
       ]
     }
@@ -41,13 +51,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:support@mintlify.com"
+        "href": "mailto:hello@brello.app"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "label": "Open Brello",
+      "href": "https://brello.app"
     }
   },
   "contextual": {
@@ -62,11 +72,9 @@
       "vscode"
     ]
   },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+  "api": {
+    "playground": {
+      "display": "none"
     }
   }
 }

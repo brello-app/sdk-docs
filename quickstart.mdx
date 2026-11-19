@@ -1,47 +1,69 @@
 ---
 title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+description: "Verify a project key and send a sample usage event."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+You need a Brello project API key, your API deployment URL, and a shell with `curl`. The local backend defaults to port 8000. For a hosted deployment, replace the origin while keeping `/v1`.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Set your environment">
+    Run these commands in Bash or Zsh. Use a test project key for the sample event.
 
-    ```bash
-    npm install your-package
-    ```
+    ~~~bash
+    export BRELLO_API_BASE_URL="http://localhost:8000/v1"
+    export BRELLO_API_KEY="YOUR_PROJECT_API_KEY"
+    ~~~
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+  <Step title="Verify your key">
+    ~~~bash
+    curl --silent --show-error --output /dev/null --write-out '%{http_code}\n' \
+      --header "Authorization: Bearer $BRELLO_API_KEY" \
+      "$BRELLO_API_BASE_URL/config"
+    ~~~
 
-    ```bash
-    your-cli init
-    ```
+    A `200` response verifies the project key. This example prints only the status because the response can include a project identity secret. See [configuration](/api-reference/config) for the available fields.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+  <Step title="Send one sample event">
+    Replace the timestamp with the completed-attempt time and generate a fresh UUID for every new event.
 
-    ```bash
-    your-cli start
-    ```
+    ~~~bash
+    curl "$BRELLO_API_BASE_URL/events" \
+      --request POST \
+      --header "Authorization: Bearer $BRELLO_API_KEY" \
+      --header "Content-Type: application/json" \
+      --data '{
+        "schemaVersion": "1",
+        "sdk": { "name": "http-example", "version": "1.0.0" },
+        "events": [{
+          "id": "019a9000-0000-7000-8000-000000000001",
+          "type": "llm.request",
+          "occurredAt": "2026-11-19T12:00:00Z",
+          "durationMs": 850,
+          "provider": "openai",
+          "model": "gpt-4o-mini",
+          "status": "success",
+          "feature": "summarize",
+          "endUser": { "id": "user_123" },
+          "usage": { "inputTokens": 1200, "outputTokens": 300 }
+        }]
+      }'
+    ~~~
+  </Step>
+  <Step title="Check the receipt">
+    ~~~json
+    {
+      "data": {
+        "requestId": "request-uuid",
+        "receivedAt": "2026-11-19T12:00:01Z",
+        "acceptedCount": 1,
+        "rejectedCount": 0,
+        "rejected": []
+      }
+    }
+    ~~~
+
+    A `202` response means valid events reached the queue. Inspect `data.rejected` for failed items. Processing and cost calculation happen later.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+See [event fields](/guides/events) to adapt the payload to your application and [delivery and retries](/guides/errors) to handle partial acceptance and network failures.

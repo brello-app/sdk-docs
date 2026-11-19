@@ -1,0 +1,38 @@
+---
+title: "Privacy and collection"
+description: "Understand collected metadata, discarded fields, and sensitive configuration."
+---
+
+The beta API accepts request metadata and token counts. It does not support prompt or response content collection.
+
+## Content filtering
+
+The server removes these legacy top-level event fields before validation and queue publication:
+
+- `content`
+- `prompt`
+- `completion`
+- `messages`
+- `inputText`
+- `outputText`
+
+Other undefined fields are rejected. Do not send prompt text through attributes, user names, or other metadata: those fields are not a content-redaction service.
+
+## Effective settings
+
+Read settings from [GET /config](/api-reference/config).
+
+| Setting | Meaning |
+| --- | --- |
+| `eventsEnabled` | Event collection; currently returned as true |
+| `attributesEnabled` | Whether additional attributes are collected |
+| `endUserIdEnabled` | Whether end-user identifiers are collected |
+| `contentCollectionSupported` | Always false in the current beta |
+
+The server removes disabled attributes and end-user references before validating and publishing events. Clients should omit disabled fields themselves.
+
+## Credentials
+
+Keep project keys server-side. Use only a SHA-256 fingerprint to identify a provider key. Configuration responses can include an identity secret: do not log the full response or store it in shared caches. Responses use `Cache-Control: no-store`.
+
+Size checks run before filtering. Do not send oversized content expecting the server to remove it.

@@ -1,0 +1,26 @@
+---
+title: "Get configuration"
+description: "Verify a project key and fetch effective collection and transport settings."
+openapi: "/openapi.json GET /config"
+---
+
+Verify the project key and fetch effective settings. This endpoint remains available independently of monthly event quota.
+
+<Warning>
+The response can contain a project-scoped identity secret. Never log the complete response or store it in a shared cache. Keep cached settings in server memory.
+</Warning>
+
+## Current values
+
+| Field | Current behavior |
+| --- | --- |
+| `schemaVersion` | `"1"` |
+| `refreshAfterSeconds` | 60 |
+| `collection.eventsEnabled` | true |
+| `collection.contentCollectionSupported` | false |
+| `transport.maxBatchEvents` | 50 |
+| `transport.maxBatchBytes` | 256000 |
+| `transport.maxEventBytes` | 64000 |
+| `identity.endUser` | Legacy HMAC settings when available, otherwise null |
+
+Attribute and user-identifier collection follow effective project settings. Omit disabled fields when you send events. Check the event receipt separately to confirm queue acceptance.

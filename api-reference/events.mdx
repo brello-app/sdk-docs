@@ -1,0 +1,22 @@
+---
+title: "Send events"
+description: "Submit up to 50 completed provider attempts with partial validation."
+openapi: "/openapi.json POST /events"
+---
+
+Send one event per completed provider attempt. Reuse its UUID on delivery retries. The project and environment come from the authenticated key.
+
+<Warning>
+A `202` response confirms queue acceptance for valid events. Processing and cost calculation happen later. Check `data.rejected` for failed items.
+</Warning>
+
+## Operational rules
+
+- Send 1 to 50 events, up to 256,000 UTF-8 bytes per request.
+- Keep each event at or below 64,000 UTF-8 bytes. One oversized event rejects the entire request with `413`.
+- Use uncompressed `application/json`.
+- Use `usage: null` when usage is unknown.
+- The current provider values are `openai` and `anthropic`.
+- The server validates each event after applying [privacy filters](/guides/privacy).
+
+See [token accounting](/guides/events), [end-user identity](/guides/end-users), [privacy controls](/guides/privacy), and [retry handling](/guides/errors).

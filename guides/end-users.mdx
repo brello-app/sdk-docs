@@ -1,0 +1,46 @@
+---
+title: "End users"
+description: "Attach project-scoped user IDs and display names to requests."
+---
+
+Supply an application ID, a display name, or both:
+
+~~~json
+{
+  "endUser": {
+    "id": "user_123",
+    "name": "Daniel"
+  }
+}
+~~~
+
+| Field | Rules |
+| --- | --- |
+| `id` | 1–256 characters; case-sensitive; stored without trimming |
+| `name` | Trimmed before validation; 1–200 characters after trimming |
+
+At least one field is required. Whitespace-only IDs and NUL characters are rejected. IDs are scoped to the project. Prefer a stable ID when display names may change.
+
+<Note>
+Name-only identities use a separate namespace. Sending an ID later does not automatically merge it with an earlier name-only user. Legacy hashed identities also remain separate.
+</Note>
+
+## Legacy hashed identities
+
+Existing integrations can use this alternative object. Do not combine it with `id` or `name`.
+
+~~~json
+{
+  "endUser": {
+    "idHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "algorithm": "hmac-sha256",
+    "keyVersion": "1"
+  }
+}
+~~~
+
+All three fields are required. To compute `idHash`, decode `identity.endUser.secret` from Base64URL and use it as the HMAC-SHA256 key. Hash the UTF-8 bytes of `domain + "\0" + applicationUserId`, using the `domain` returned by config and the original, case-sensitive ID. Encode the result as 64 lowercase hexadecimal characters. Send key version `"1"`.
+
+[GET /config](/api-reference/config) returns legacy identity settings when available. If `identity.endUser` is `null`, omit the legacy reference. New integrations can use a project-scoped application ID directly when `collection.endUserIdEnabled` is true.
+
+When `collection.endUserIdEnabled` is false, omit `endUser`. The server also removes it before validation and queue publication.

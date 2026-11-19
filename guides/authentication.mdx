@@ -1,0 +1,28 @@
+---
+title: "Authentication"
+description: "Authenticate ingestion and configuration requests with a project API key."
+---
+
+Send your complete project key in the Authorization header:
+
+~~~http
+Authorization: Bearer YOUR_PROJECT_API_KEY
+~~~
+
+| Prefix | Environment |
+| --- | --- |
+| `brl_live_` | Live |
+| `brl_test_` | Test |
+| `brello_` | Legacy; environment resolved by the server |
+
+The current HTTP server accepts these prefixes followed by a 43-character Base64URL token. Use a key issued for your project. Do not generate keys or append an SDK checksum to an HTTP key.
+
+## Project and environment
+
+The authenticated key determines the organization, project, and environment. Do not include these properties in the batch payload. Unknown batch properties are rejected.
+
+Call [GET /config](/api-reference/config) to verify access and inspect the effective project settings. A `401` response means authentication failed; stop sending and check the key.
+
+## Server-side secrets
+
+Store credentials in server environment variables or secret bindings. Never expose them through browser bundles or `NEXT_PUBLIC_` variables. Provider API keys are separate credentials and must not appear in event payloads. Use an optional [provider key fingerprint](/guides/events#provider-key-fingerprints).

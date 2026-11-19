@@ -1,0 +1,850 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Brello SDK API",
+    "version": "1.0.0-beta.2",
+    "description": "Public write-only SDK ingestion and minimal configuration. Dashboard APIs are excluded."
+  },
+  "servers": [
+    {
+      "url": "/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "projectKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "brl_live_ / brl_test_ (legacy brello_ accepted)"
+      }
+    },
+    "schemas": {
+      "BatchReceipt": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string"
+              },
+              "receivedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "acceptedCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "rejectedCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "rejected": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RejectedEvent"
+                }
+              }
+            },
+            "required": [
+              "requestId",
+              "receivedAt",
+              "acceptedCount",
+              "rejectedCount",
+              "rejected"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "RejectedEvent": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "INVALID_EVENT",
+              "EVENT_TOO_LARGE"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationIssue"
+            }
+          }
+        },
+        "required": [
+          "index",
+          "code",
+          "issues"
+        ]
+      },
+      "ValidationIssue": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "code"
+        ]
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "requestId"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "EventBatch": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "enum": [
+              "1"
+            ]
+          },
+          "sdk": {
+            "$ref": "#/components/schemas/SdkInfo"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LlmRequestEvent"
+            },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "sdk",
+          "events"
+        ],
+        "additionalProperties": false,
+        "description": "Events are validated independently for partial acceptance. Body limits are UTF-8 bytes. Authenticated project and environment are never taken from this payload."
+      },
+      "SdkInfo": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "runtime": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "LlmRequestEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "llm.request"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic"
+            ]
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "error",
+              "cancelled"
+            ]
+          },
+          "providerKey": {
+            "$ref": "#/components/schemas/ProviderKeyReference"
+          },
+          "providerRequestId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "logicalRequestId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "feature": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "endUser": {
+            "$ref": "#/components/schemas/EndUserReference"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/TokenUsage"
+          },
+          "billing": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "standard",
+                  "batch",
+                  "unknown"
+                ]
+              },
+              "serviceTier": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
+            },
+            "additionalProperties": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "httpStatus": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 599
+              }
+            },
+            "additionalProperties": false
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "occurredAt",
+          "durationMs",
+          "provider",
+          "model",
+          "status",
+          "usage"
+        ],
+        "additionalProperties": false,
+        "description": "One completed provider attempt. Delivery retries reuse the event UUID; a new provider attempt gets a new UUID. Content is not collected in beta. Unknown fields are rejected; legacy content/prompt/completion/messages fields are discarded before validation."
+      },
+      "ProviderKeyReference": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "type": "object",
+            "properties": {
+              "algorithm": {
+                "type": "string",
+                "enum": [
+                  "sha256"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "algorithm",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "hint": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "type": "string",
+                "enum": [
+                  "openai-redacted-v1",
+                  "anthropic-redacted-v1"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9_-]{3,32}(?:\\.\\.\\.|…)[A-Za-z0-9_-]{3,12}$"
+              }
+            },
+            "required": [
+              "format",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "fingerprint"
+        ],
+        "additionalProperties": false,
+        "description": "SHA-256 fingerprint of the provider secret, never the secret itself. A redacted hint is optional and is only a heuristic matching signal."
+      },
+      "EndUserReference": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/IdentifiedEndUserReference"
+          },
+          {
+            "$ref": "#/components/schemas/HashedEndUserReference"
+          }
+        ]
+      },
+      "IdentifiedEndUserReference": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "id"
+            ]
+          },
+          {
+            "required": [
+              "name"
+            ]
+          }
+        ],
+        "description": "Application user ID and/or display name. IDs are project-scoped, case-sensitive and not trimmed. Names alone form a separate identity namespace and are not automatically merged with IDs."
+      },
+      "HashedEndUserReference": {
+        "type": "object",
+        "properties": {
+          "idHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "algorithm": {
+            "type": "string",
+            "enum": [
+              "hmac-sha256"
+            ]
+          },
+          "keyVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "idHash",
+          "algorithm",
+          "keyVersion"
+        ],
+        "additionalProperties": false,
+        "description": "Legacy project-scoped HMAC identity. It is kept separate from supplied IDs and names."
+      },
+      "TokenUsage": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "inputTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Total input tokens, including cache reads and cache creation."
+          },
+          "outputTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Total billable output tokens; reasoning tokens must not be added again."
+          },
+          "cacheReadInputTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "cacheCreationInputTokens": {
+            "type": "object",
+            "properties": {
+              "fiveMinutes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "oneHour": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "inputTokens",
+          "outputTokens"
+        ],
+        "additionalProperties": false,
+        "description": "Null means unknown usage, never zero cost."
+      },
+      "SdkConfig": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "type": "string",
+                "enum": [
+                  "1"
+                ]
+              },
+              "configVersion": {
+                "type": "string"
+              },
+              "serverTime": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "refreshAfterSeconds": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "project": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "live",
+                      "test"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "environment"
+                ]
+              },
+              "collection": {
+                "type": "object",
+                "properties": {
+                  "eventsEnabled": {
+                    "type": "boolean"
+                  },
+                  "attributesEnabled": {
+                    "type": "boolean"
+                  },
+                  "endUserIdEnabled": {
+                    "type": "boolean"
+                  },
+                  "contentCollectionSupported": {
+                    "type": "boolean",
+                    "enum": [
+                      false
+                    ]
+                  }
+                },
+                "required": [
+                  "eventsEnabled",
+                  "attributesEnabled",
+                  "endUserIdEnabled",
+                  "contentCollectionSupported"
+                ]
+              },
+              "transport": {
+                "type": "object",
+                "properties": {
+                  "maxBatchEvents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "maxBatchBytes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "maxEventBytes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "maxBatchEvents",
+                  "maxBatchBytes",
+                  "maxEventBytes"
+                ]
+              },
+              "identity": {
+                "type": "object",
+                "properties": {
+                  "endUser": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "algorithm": {
+                        "type": "string",
+                        "enum": [
+                          "hmac-sha256"
+                        ]
+                      },
+                      "secretEncoding": {
+                        "type": "string",
+                        "enum": [
+                          "base64url"
+                        ]
+                      },
+                      "keyVersion": {
+                        "type": "string"
+                      },
+                      "secret": {
+                        "type": "string"
+                      },
+                      "domain": {
+                        "type": "string",
+                        "enum": [
+                          "brello:end-user:v1"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "algorithm",
+                      "secretEncoding",
+                      "keyVersion",
+                      "secret",
+                      "domain"
+                    ]
+                  }
+                },
+                "required": [
+                  "endUser"
+                ]
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "configVersion",
+              "serverTime",
+              "refreshAfterSeconds",
+              "project",
+              "collection",
+              "transport",
+              "identity"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/events": {
+      "post": {
+        "operationId": "sendEvents",
+        "tags": [
+          "Events"
+        ],
+        "security": [
+          {
+            "projectKey": []
+          }
+        ],
+        "summary": "Accept a batch of SDK events",
+        "description": "One provider attempt per event. Validation is per item; 202 means all valid items were acknowledged by the durable queue, not processed or billed. Retries reuse event UUIDs. Monthly quotas are approximate in beta. Content is discarded before publication. End users may supply a project-scoped ID/name or a legacy HMAC reference. Provider secrets are never accepted.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Valid events durably accepted; inspect rejected for invalid items. Consumers deduplicate events.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON, batch envelope, or schema version. Do not retry unchanged.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or revoked project key. Stop sending and warn once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Split the batch. A single oversized event must be reduced or discarded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Only uncompressed application/json is supported.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No valid events. Inspect rejected and do not retry unchanged.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchReceipt"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or asynchronous monthly quota exceeded.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before retrying. The SDK must also enforce its own maximum buffer age."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage, identity, or admission unavailable. Retry with the same event UUIDs and bounded exponential backoff.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before retrying. The SDK must also enforce its own maximum buffer age."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "operationId": "getConfig",
+        "tags": [
+          "Config"
+        ],
+        "security": [
+          {
+            "projectKey": []
+          }
+        ],
+        "summary": "Verify the project key and fetch effective SDK settings",
+        "description": "Includes a project-scoped identity secret. Never log or persist this response in shared caches. Authentication success does not mean events have been received. Available independently of monthly event quota.",
+        "responses": {
+          "200": {
+            "description": "Authenticated project and effective collection configuration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SdkConfig"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or revoked project key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Config polling rate exceeded.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before retrying. The SDK must also enforce its own maximum buffer age."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SDK configuration temporarily unavailable.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before retrying. The SDK must also enforce its own maximum buffer age."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

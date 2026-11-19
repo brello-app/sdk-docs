@@ -1,0 +1,89 @@
+---
+title: "Events and token usage"
+description: "Represent provider attempts, cache tokens, features, and attributes."
+---
+
+Send one `llm.request` event after each provider attempt finishes. Give every new provider attempt a new UUID. Reuse the UUID when retrying delivery of that same event.
+
+## Required fields
+
+| Field | Value |
+| --- | --- |
+| `id` | UUID |
+| `type` | `"llm.request"` |
+| `occurredAt` | ISO 8601 timestamp with `Z` or a timezone offset |
+| `durationMs` | Nonnegative integer, in milliseconds |
+| `provider` | `openai` or `anthropic` |
+| `model` | String, 1–256 characters |
+| `status` | `success`, `error`, or `cancelled` |
+| `usage` | Token usage object or `null` |
+
+Count values must be integers between 0 and 9,007,199,254,740,991.
+
+## Token accounting
+
+~~~json
+{
+  "inputTokens": 1400,
+  "outputTokens": 300,
+  "cacheReadInputTokens": 200,
+  "cacheCreationInputTokens": {
+    "fiveMinutes": 100,
+    "oneHour": 0
+  }
+}
+~~~
+
+`inputTokens` and `outputTokens` are required when usage is an object. Cache fields are optional.
+
+Total input tokens include cache reads and cache creation. Add those subsets to uncached input if a provider reports them separately. The combined cache subsets must not exceed `inputTokens`.
+
+Output tokens include all billable output. Do not add reasoning tokens again if they are already included.
+
+Use `usage: null` when usage is unknown, including failed or cancelled calls without usage data. Unknown usage does not mean zero cost. For streaming requests, use final usage when the attempt completes.
+
+## Optional metadata
+
+| Field | Limit or values |
+| --- | --- |
+| `feature` | 1–64 characters |
+| `logicalRequestId` | 1–128 characters; groups related attempts |
+| `providerRequestId` | 1–256 characters |
+| `billing.mode` | `standard`, `batch`, `unknown` |
+| `billing.serviceTier` | 1–64 characters |
+| `error.code` | 1–128 characters |
+| `error.httpStatus` | Integer, 100–599 |
+
+~~~json
+{
+  "feature": "summarize",
+  "logicalRequestId": "turn_123",
+  "endUser": { "id": "user_123" },
+  "attributes": { "plan": "pro", "streaming": true }
+}
+~~~
+
+Attributes support up to 32 entries. Keys start with an ASCII letter, followed by ASCII letters, digits, underscores, dots, or hyphens, up to 64 characters total. Values are strings up to 256 characters, finite numbers, or booleans. Arrays, nested objects, and null values are not supported. `plan` is an attribute, not a top-level field.
+
+## Provider key fingerprints
+
+~~~json
+{
+  "providerKey": {
+    "fingerprint": {
+      "algorithm": "sha256",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "hint": {
+      "format": "openai-redacted-v1",
+      "value": "sk-proj-abc...xyz"
+    }
+  }
+}
+~~~
+
+Calculate the fingerprint from the exact provider secret as a SHA-256 digest encoded in 64 lowercase hexadecimal characters. The example digest is illustrative. Never send the raw secret.
+
+The hint is optional and only helps heuristic matching. Its format is `openai-redacted-v1` or `anthropic-redacted-v1`. With the ASCII `...` separator, use 3–32 letters, digits, underscores, or hyphens before it and 3–12 after it.
+
+See the [endpoint schema](/api-reference/events), [end-user identities](/guides/end-users), and [privacy controls](/guides/privacy).

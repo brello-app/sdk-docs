@@ -1,0 +1,79 @@
+---
+title: "Errors, limits, and retries"
+description: "Handle partial acceptance, delivery failures, and request quotas."
+---
+
+## Partial acceptance
+
+A `202` response acknowledges valid events into the durable queue. Invalid siblings appear in `rejected`. A `422` response uses the same receipt when no event is valid.
+
+~~~json
+{
+  "data": {
+    "requestId": "request-uuid",
+    "receivedAt": "2026-11-19T12:00:01Z",
+    "acceptedCount": 1,
+    "rejectedCount": 1,
+    "rejected": [{
+      "index": 1,
+      "code": "INVALID_EVENT",
+      "issues": [{ "path": "/provider", "code": "invalid_value" }]
+    }]
+  }
+}
+~~~
+
+Indexes are zero-based. A rejected item's ID is included only when it parses as a UUID. Each item returns at most 16 issues. Correct rejected items before resubmitting. Accepted items do not need another delivery.
+
+## Request failures
+
+Other documented errors use this envelope:
+
+~~~json
+{
+  "error": {
+    "code": "INVALID_PROJECT_KEY",
+    "message": "Supply an active Brello project API key.",
+    "requestId": "request-uuid"
+  }
+}
+~~~
+
+| Status | Action |
+| --- | --- |
+| `400` | Fix JSON, the batch envelope, or the schema version |
+| `401` | Stop delivery and check the key |
+| `413` | Split the batch; reduce or discard oversized events |
+| `415` | Use uncompressed `application/json` |
+| `422` | Fix rejected events; do not retry unchanged |
+| `429` | Honor `Retry-After` and check rate limits or quota |
+| `503` | Honor `Retry-After` and use bounded exponential backoff |
+
+Reuse event UUIDs for delivery retries, including after network timeouts or a `503`. Some events may already be queued when a later part of the request fails. Brello deduplicates those events during processing. Generate a fresh UUID for each new provider attempt.
+
+## Limits
+
+| Item | Current limit |
+| --- | --- |
+| Events per batch | 50 |
+| Request body | 256,000 UTF-8 bytes |
+| Single event | 64,000 UTF-8 bytes |
+| Event requests per key | 120 per minute, per server process |
+| Config requests per key | 30 per minute, per server process |
+
+A single oversized event rejects the entire batch with `413` and an `EVENT_TOO_LARGE` error.
+
+Monthly quotas are organization-wide and approximately enforced with asynchronous counts in beta. A monthly-quota response sets `Retry-After` to the next UTC month boundary. Config requests remain available independently of monthly event quota.
+
+## Error codes
+
+| Code | Status |
+| --- | --- |
+| `INVALID_JSON`, `INVALID_BATCH` | 400 |
+| `INVALID_PROJECT_KEY` | 401 |
+| `BATCH_TOO_LARGE`, `EVENT_TOO_LARGE` | 413 |
+| `UNSUPPORTED_MEDIA_TYPE` | 415 |
+| `RATE_LIMITED`, `MONTHLY_EVENT_LIMIT` | 429 |
+| `PLAN_UNAVAILABLE`, `IDENTITY_UNAVAILABLE`, `RATE_LIMIT_UNAVAILABLE`, `SDK_UNAVAILABLE` | 503 |
+
+Bound buffer size, event age, retry count, and backoff. Preserve UUIDs and inspect partial receipts. Handle telemetry failures separately from the main product response.
