@@ -573,7 +573,9 @@
             "type": "string",
             "enum": [
               "openai",
-              "anthropic"
+              "anthropic",
+              "google_ai_studio",
+              "google_vertex_ai"
             ]
           },
           "model": {

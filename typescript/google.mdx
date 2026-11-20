@@ -1,0 +1,53 @@
+---
+title: "Google AI Studio and Vertex AI"
+description: "Collect Gemini Developer API and Vertex AI usage with the TypeScript SDK."
+---
+
+Use `@google/genai` with either backend. Follow the [TypeScript quickstart](/typescript/quickstart#wrap-your-client) to create your wrapped `gemini` client. Pass the provider ID in `wrap()` so Brello can distinguish the two backends.
+
+| Backend | Provider ID | Google credentials |
+| --- | --- | --- |
+| Google AI Studio (Gemini Developer API) | `google_ai_studio` | Set `GEMINI_API_KEY` for the Google client. |
+| Vertex AI | `google_vertex_ai` | Set `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` for the quickstart example. Authenticate the Google client with Application Default Credentials. |
+
+Brello uses its own project ingestion key. The SDK collects usage from the methods below. Automatic imports of Google billing data are not yet available.
+
+## Send a request
+
+Set `GEMINI_MODEL` to a model available to your Google backend.
+
+~~~ts
+const response = await gemini.models.generateContent({
+  model: process.env.GEMINI_MODEL!,
+  contents: 'Summarize what this application does.',
+});
+~~~
+
+Your application can read `response.text` as usual. Brello collects the model, available token counts, and a response ID when Google provides one. It leaves prompts, output text, tool arguments and results, and embedding vectors for your application to handle.
+
+## Supported methods
+
+| Method | Usage recorded |
+| --- | --- |
+| `models.generateContent()` | Available input, output, and cached input token counts |
+| `models.generateContentStream()` | Available final token counts from the consumed stream |
+| `models.embedContent()` | Reported input tokens and zero output tokens when Google returns usable counts |
+
+Google usage is recorded per wrapped SDK method call. The Google client may make additional requests internally, for example for automatic continuation. For generation, input totals include tool-use prompt tokens and output totals include thinking tokens when Google reports them. Cached input is included in total input and reported separately as a subset. Brello records `usage: null` when it cannot determine usable token counts.
+
+## Track streaming usage
+
+~~~ts
+const stream = await gemini.models.generateContentStream({
+  model: process.env.GEMINI_MODEL!,
+  contents: 'Summarize the release notes.',
+});
+
+for await (const chunk of stream) {
+  if (chunk.text) process.stdout.write(chunk.text);
+}
+~~~
+
+Consume the stream to completion to capture its final usage. If you stop iterating early, Brello records a cancelled call with unknown usage. In a short-lived script, call `await brello.flush()` after consuming the stream.
+
+See [configuration and delivery](/typescript/configuration) for user and feature attribution, and [privacy and collection](/guides/privacy) for data handling.

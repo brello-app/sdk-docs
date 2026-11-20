@@ -36,6 +36,7 @@
               "typescript/quickstart",
               "typescript/openai",
               "typescript/anthropic",
+              "typescript/google",
               "typescript/configuration"
             ]
           }

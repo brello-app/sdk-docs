@@ -48,6 +48,8 @@ const response = await brello.withContext(
 
 Pass defaults as the second argument to `wrap(client, defaults)`. Set `endUser: false` or `attributes: false` in a context to omit the corresponding fields. Brello sends user and attribute fields when the project configuration enables them. When hashing is enabled, the SDK omits the user until [configuration](/api-reference/config) supplies the HMAC settings.
 
+Changes to collection settings can take up to 60 seconds to reach a running SDK. For [Google Gen AI clients](/typescript/google), set `provider` in `wrap()` to select the backend for that client. Use `withContext()` for per-call metadata.
+
 Send application user IDs and allowlisted attributes. Brello collects usage metadata without reading prompts, output text, tool arguments or results, or embedding vectors. See [privacy and collection settings](/guides/privacy).
 
 ## Batch and flush events

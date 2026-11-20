@@ -1,51 +1,76 @@
 ---
 title: "TypeScript quickstart"
-description: "Wrap your OpenAI or Anthropic client and send your first usage event."
+description: "Wrap your OpenAI, Anthropic, or Google Gen AI client and send your first usage event."
 ---
 
-Use `@brello/sdk` in a server-side Node.js application. You need Node.js 18 or newer, a Brello project ingestion key, and a key for your AI provider.
+Use `@brello/sdk` in a server-side Node.js application. You need Node.js 18 or newer, a Brello project ingestion key, and credentials for your AI provider. Follow your provider SDK's Node.js requirements as well.
 
 ## Install the SDK
 
-Install the Brello package provided for your deployment. If you're testing from the SDK source, run `pnpm install` and `pnpm pack` in the SDK's `typescript` directory. Then install the resulting package from your application directory:
+Install the Brello SDK in your application directory:
 
-~~~bash
-npm install /path/to/brello-sdk-0.0.1.tgz
-~~~
+```bash
+npm install @brello/sdk
+```
 
-Use the tarball filename printed by `pnpm pack`. Keep your existing `openai` or `@anthropic-ai/sdk` dependency.
+To test from source, run `pnpm install` and `pnpm pack` in the SDK's `typescript` directory. From your application directory, run `npm install` with the tarball path printed by `pnpm pack`.
+
+Keep your existing provider SDK dependency. For Google AI Studio or Vertex AI, install `@google/genai` if your application doesn't already use it.
 
 ## Set your Brello environment
 
-~~~bash
+```bash
 export BRELLO_API_KEY="YOUR_BRELLO_PROJECT_KEY"
-~~~
+```
 
-The SDK uses `https://api.brello.app/v1` by default. If you run Brello yourself, [set your self-hosted API URL](/typescript/configuration#connect-to-self-hosted-brello). Set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` separately in your application.
+The SDK uses `https://api.brello.app/v1` by default. If you run Brello yourself, [set your self-hosted API URL](/typescript/configuration#connect-to-self-hosted-brello). Configure your provider credentials separately in your application.
 
 ## Wrap your client
 
 Choose the client you already use. Create one Brello instance per application runtime so calls share a buffer.
 
 <CodeGroup>
-~~~ts OpenAI
+```ts OpenAI
 import { Brello } from '@brello/sdk';
 import OpenAI from 'openai';
 
 const brello = new Brello();
 export const openai = brello.wrap(new OpenAI());
-~~~
+```
 
-~~~ts Anthropic
+```ts Anthropic
 import { Brello } from '@brello/sdk';
 import Anthropic from '@anthropic-ai/sdk';
 
 const brello = new Brello();
 export const anthropic = brello.wrap(new Anthropic());
-~~~
+```
+
+```ts Google AI Studio
+import { Brello } from '@brello/sdk';
+import { GoogleGenAI } from '@google/genai';
+
+const brello = new Brello();
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+export const gemini = brello.wrap(client, { provider: 'google_ai_studio' });
+```
+
+```ts Vertex AI
+import { Brello } from '@brello/sdk';
+import { GoogleGenAI } from '@google/genai';
+
+const brello = new Brello();
+const client = new GoogleGenAI({
+  vertexai: true,
+  project: process.env.GOOGLE_CLOUD_PROJECT,
+  location: process.env.GOOGLE_CLOUD_LOCATION,
+});
+export const gemini = brello.wrap(client, { provider: 'google_vertex_ai' });
+```
+
 </CodeGroup>
 
-Keep your existing provider calls. Follow the [OpenAI guide](/typescript/openai) or [Anthropic guide](/typescript/anthropic) to send a request if you're starting from a new application.
+Keep your existing provider calls. For setup and request examples, see the [OpenAI](/typescript/openai), [Anthropic](/typescript/anthropic), or [Google AI Studio and Vertex AI](/typescript/google) guide.
 
 ## Verify the connection
 

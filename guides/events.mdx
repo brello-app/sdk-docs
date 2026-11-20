@@ -13,7 +13,7 @@ Send one `llm.request` event after each provider attempt finishes. Give every ne
 | `type` | `"llm.request"` |
 | `occurredAt` | ISO 8601 timestamp with `Z` or a timezone offset |
 | `durationMs` | Nonnegative integer, in milliseconds |
-| `provider` | `openai` or `anthropic` |
+| `provider` | `openai`, `anthropic`, `google_ai_studio`, or `google_vertex_ai` |
 | `model` | String, 1–256 characters |
 | `status` | `success`, `error`, or `cancelled` |
 | `usage` | Token usage object or `null` |
