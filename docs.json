@@ -28,6 +28,34 @@
         ]
       },
       {
+        "tab": "TypeScript",
+        "groups": [
+          {
+            "group": "TypeScript SDK",
+            "pages": [
+              "typescript/quickstart",
+              "typescript/openai",
+              "typescript/anthropic",
+              "typescript/configuration"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Python",
+        "groups": [
+          {
+            "group": "Python SDK",
+            "pages": [
+              "python/quickstart",
+              "python/openai",
+              "python/anthropic",
+              "python/configuration"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API reference",
         "groups": [
           {

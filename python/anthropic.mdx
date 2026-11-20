@@ -1,0 +1,57 @@
+---
+title: "Anthropic"
+description: "Track Anthropic Messages usage in sync and async Python applications."
+---
+
+Start with the [Python quickstart](/python/quickstart). Set `ANTHROPIC_API_KEY` and choose a Claude model your project can use for `ANTHROPIC_MODEL`.
+
+## Track a Messages call
+
+~~~python
+import os
+
+from anthropic import Anthropic
+from brello import Brello
+
+brello = Brello()
+with brello.wrap(Anthropic()) as client:
+    message = client.messages.create(
+        model=os.environ["ANTHROPIC_MODEL"],
+        max_tokens=256,
+        messages=[{"role": "user", "content": "Summarize the release notes."}],
+    )
+
+brello.flush()
+~~~
+
+Brello observes `messages.create()`, including `stream=True`, and `messages.stream()`. Your existing tools and message handlers continue to receive the provider's results.
+
+## Track async Messages streaming
+
+~~~python
+import asyncio
+import os
+
+from anthropic import AsyncAnthropic
+from brello import Brello
+
+
+async def main():
+    brello = Brello()
+    async with brello.wrap(AsyncAnthropic()) as client:
+        async with client.messages.stream(
+            model=os.environ["ANTHROPIC_MODEL"],
+            max_tokens=256,
+            messages=[{"role": "user", "content": "Summarize the release notes."}],
+        ) as stream:
+            async for text in stream.text_stream:
+                print(text, end="")
+            message = await stream.get_final_message()
+
+    await brello.aflush()
+
+
+asyncio.run(main())
+~~~
+
+Brello uses Anthropic's cumulative stream usage to record one event per observed request. Total input includes uncached input, cache reads, and cache creation. Brello preserves the five-minute and one-hour cache creation categories when supplied. A missing final count or a cache write the SDK cannot classify produces `usage: null`.

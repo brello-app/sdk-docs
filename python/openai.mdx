@@ -1,0 +1,67 @@
+---
+title: "OpenAI"
+description: "Track OpenAI Responses, Chat Completions, and Embeddings usage in Python."
+---
+
+Start with the [Python quickstart](/python/quickstart). Set `OPENAI_API_KEY` and choose a model your project can use for `OPENAI_MODEL`.
+
+## Track a Responses call
+
+~~~python
+import os
+
+from brello import Brello
+from openai import OpenAI
+
+brello = Brello()
+with brello.wrap(OpenAI()) as client:
+    response = client.responses.create(
+        model=os.environ["OPENAI_MODEL"],
+        input="Summarize the release notes.",
+    )
+    print(response.output_text)
+
+brello.flush()
+~~~
+
+| API | Observed methods |
+| --- | --- |
+| Responses | `responses.create()`, including `stream=True`, and `responses.stream()` |
+| Chat Completions | `chat.completions.create()`, including `stream=True`, and `chat.completions.stream()` |
+| Embeddings | `embeddings.create()` |
+
+For embeddings, Brello records input tokens and zero output tokens. Tool calls through supported methods count as part of the provider request. Brello reads usage metadata and leaves the prompt, output, tool arguments, and embedding vectors in your application.
+
+## Track async Chat Completions streaming
+
+Request the final usage chunk with `stream_options={"include_usage": True}` and consume the provider stream as usual.
+
+~~~python
+import asyncio
+import os
+
+from brello import Brello
+from openai import AsyncOpenAI
+
+
+async def main():
+    brello = Brello()
+    async with brello.wrap(AsyncOpenAI()) as client:
+        stream = await client.chat.completions.create(
+            model=os.environ["OPENAI_MODEL"],
+            messages=[{"role": "user", "content": "Summarize the release notes."}],
+            stream=True,
+            stream_options={"include_usage": True},
+        )
+        async with stream:
+            async for chunk in stream:
+                if chunk.choices:
+                    print(chunk.choices[0].delta.content or "", end="")
+
+    await brello.aflush()
+
+
+asyncio.run(main())
+~~~
+
+If final token counts are unavailable, Brello records `usage: null`. With `with_raw_response` or `with_streaming_response`, Brello keeps the body available to your application and records basic request metadata without token usage.

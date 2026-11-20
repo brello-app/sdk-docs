@@ -11,10 +11,10 @@ An organization owner can [create a project read key](/api-reference/create-api-
 | [End users with matching activity](/api-reference/end-users) | `end_users:read` |
 | [Weekly reports](/api-reference/reports) and [PDF downloads](/api-reference/report-pdf) | `reports:read` |
 
-Set `BRELLO_API_ORIGIN` to your API origin without a path and `BRELLO_READ_KEY` to a key with `spend:read`.
+Set `BRELLO_READ_KEY` to a key with `spend:read`. If you run Brello yourself, substitute your deployment's origin in the example.
 
 ~~~bash
-curl --get "$BRELLO_API_ORIGIN/v1/spend" \
+curl --get "https://api.brello.app/v1/spend" \
   --header "Authorization: Bearer $BRELLO_READ_KEY" \
   --data-urlencode "environment=live" \
   --data-urlencode "groupBy=model"

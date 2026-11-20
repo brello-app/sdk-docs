@@ -1,0 +1,47 @@
+---
+title: "OpenAI"
+description: "Collect OpenAI Responses, Chat Completions, and Embeddings usage in TypeScript."
+---
+
+Start with a wrapped client from the [TypeScript quickstart](/typescript/quickstart). Set `OPENAI_MODEL` to a model your project can use.
+
+~~~ts
+const response = await openai.responses.create({
+  model: process.env.OPENAI_MODEL!,
+  input: 'Summarize what this application does.',
+});
+~~~
+
+The wrapped client retains its TypeScript methods and return types. Your application can read `response.output_text` as usual. Brello reads operational metadata such as the model, token usage, and provider request ID.
+
+## Supported methods
+
+| API | Methods |
+| --- | --- |
+| Responses | `responses.create()`, including `stream: true`, and `responses.stream()` |
+| Chat Completions | `chat.completions.create()`, including `stream: true`, and `chat.completions.stream()` |
+| Embeddings | `embeddings.create()` |
+
+Tool calls through these methods are counted as part of their provider request. Brello leaves the tool arguments, tool results, and embedding vectors in the original provider response.
+
+## Track streaming usage
+
+Brello observes the stream as your application consumes it. Responses usage comes from the terminal response event. For Chat Completions, add `stream_options.include_usage` to receive the final usage chunk:
+
+~~~ts
+const stream = await openai.chat.completions.create({
+  model: process.env.OPENAI_MODEL!,
+  messages: [{ role: 'user', content: 'Summarize the release notes.' }],
+  stream: true,
+  stream_options: { include_usage: true },
+});
+
+for await (const chunk of stream) {
+  const text = chunk.choices[0]?.delta.content;
+  if (text) process.stdout.write(text);
+}
+~~~
+
+If the stream ends before final counts arrive, Brello records `usage: null`. Consume the original SDK iterator or use its stream helper methods. On raw streams, `tee()` and `toReadableStream()` may bypass Brello's observation.
+
+`.withResponse()` keeps the parsed result and headers available. `.asResponse()` leaves the body unread and records usage as unknown. Brello estimates costs server-side. Embeddings report input tokens and zero output tokens. Cached input and reasoning output are already included in their respective totals.

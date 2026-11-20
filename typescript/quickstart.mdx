@@ -1,0 +1,54 @@
+---
+title: "TypeScript quickstart"
+description: "Wrap your OpenAI or Anthropic client and send your first usage event."
+---
+
+Use `@brello/sdk` in a server-side Node.js application. You need Node.js 18 or newer, a Brello project ingestion key, and a key for your AI provider.
+
+## Install the SDK
+
+Install the Brello package provided for your deployment. If you're testing from the SDK source, run `pnpm install` and `pnpm pack` in the SDK's `typescript` directory. Then install the resulting package from your application directory:
+
+~~~bash
+npm install /path/to/brello-sdk-0.0.1.tgz
+~~~
+
+Use the tarball filename printed by `pnpm pack`. Keep your existing `openai` or `@anthropic-ai/sdk` dependency.
+
+## Set your Brello environment
+
+~~~bash
+export BRELLO_API_KEY="YOUR_BRELLO_PROJECT_KEY"
+~~~
+
+The SDK uses `https://api.brello.app/v1` by default. If you run Brello yourself, [set your self-hosted API URL](/typescript/configuration#connect-to-self-hosted-brello). Set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` separately in your application.
+
+## Wrap your client
+
+Choose the client you already use. Create one Brello instance per application runtime so calls share a buffer.
+
+<CodeGroup>
+~~~ts OpenAI
+import { Brello } from '@brello/sdk';
+import OpenAI from 'openai';
+
+const brello = new Brello();
+export const openai = brello.wrap(new OpenAI());
+~~~
+
+~~~ts Anthropic
+import { Brello } from '@brello/sdk';
+import Anthropic from '@anthropic-ai/sdk';
+
+const brello = new Brello();
+export const anthropic = brello.wrap(new Anthropic());
+~~~
+</CodeGroup>
+
+Keep your existing provider calls. Follow the [OpenAI guide](/typescript/openai) or [Anthropic guide](/typescript/anthropic) to send a request if you're starting from a new application.
+
+## Verify the connection
+
+Complete a provider call or finish consuming its stream. In Brello, open your project's **Settings** and look for **Connected** under SDK activity. That status appears after the worker stores an event. For a short-lived test script, call `await brello.flush()` before it exits.
+
+If the status stays pending, check your [project key](/guides/authentication) and set `BRELLO_DEBUG=1` to inspect event delivery. See [configuration and delivery](/typescript/configuration) for context, retries, and serverless examples.

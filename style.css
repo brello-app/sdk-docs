@@ -1,0 +1,5 @@
+/* Header logo size (Mintlify default is about 28px tall) */
+.nav-logo {
+  height: 20px !important;
+  width: auto !important;
+}

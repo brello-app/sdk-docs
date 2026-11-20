@@ -1,0 +1,53 @@
+---
+title: "Configuration and delivery"
+description: "Configure project keys, add usage context, and flush Python SDK events."
+---
+
+Pass options as keyword arguments to `Brello()`. Explicit arguments take precedence over environment variables.
+
+| Argument | Environment variable | Behavior |
+| --- | --- | --- |
+| `api_key` | `BRELLO_API_KEY` | Project ingestion key |
+| `api_base_url` | `BRELLO_API_BASE_URL` | Optional self-hosted API URL. Defaults to `https://api.brello.app/v1` |
+| `environment` | `BRELLO_ENV` | `prod` or `live` expects a live key. `staging` or `test` expects a test key |
+| `service_name` | `BRELLO_SERVICE_NAME` | Adds `serviceName` when the project collects attributes |
+| `enabled` | `BRELLO_ENABLED` | Use `false` or `0` in the environment to disable delivery |
+| `debug` | `BRELLO_DEBUG` | Use `true` or `1` and enable INFO logging for the `brello` logger |
+| `debug_include_context` | | Includes user and attribute values in debug logs. Use with local test data |
+| `hash_end_user_id` | | Sends a project-scoped HMAC when the project supplies hashing configuration |
+
+Debug output masks user and attribute values by default. If the environment and project key disagree, event delivery is disabled and provider calls continue.
+
+## Connect to self-hosted Brello
+
+~~~bash
+export BRELLO_API_BASE_URL="https://brello-api.example.com/v1"
+~~~
+
+You can also pass `api_base_url` to `Brello()`. Use HTTPS outside loopback development.
+
+## Attribute usage to users and features
+
+~~~python
+import os
+
+with brello.with_context(
+    end_user={"id": "user_123"},
+    feature="summarize",
+    attributes={"plan": "pro"},
+):
+    response = client.responses.create(
+        model=os.environ["OPENAI_MODEL"],
+        input="Summarize the release notes.",
+    )
+~~~
+
+Context follows the current async task. Use a regular `with` block around awaited provider calls. Set defaults through `wrap(client, ...)` and pass `end_user=False` or `attributes=False` to omit those fields. Brello includes user and attribute fields when the project permits collection. With hashing enabled, it omits the user until [SDK configuration](/api-reference/config) supplies hashing settings. See [privacy and collection](/guides/privacy).
+
+## Batch and flush events
+
+The background worker starts a batch after 20 events or about two seconds. The buffer holds up to 500 events or 2 MiB of serialized events, including the batch in flight. Older pending events are evicted when the buffer fills. Events expire after 60 seconds.
+
+Retries reuse the same UUID and honor `Retry-After`. After three consecutive ingestion failures caused by a network error, timeout, or HTTP `5xx`, delivery pauses for 30 seconds. The next batch checks recovery. Further failures extend the pause up to five minutes. Provider calls continue during delivery failures.
+
+Call `brello.flush()` or `await brello.aflush()` during shutdown or before a short-lived invocation ends. The default wait is five seconds. Both methods take a `timeout` in seconds and can return early when delivery is paused past the deadline.

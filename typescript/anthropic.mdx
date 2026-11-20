@@ -1,0 +1,37 @@
+---
+title: "Anthropic"
+description: "Collect Anthropic Messages and streaming usage in TypeScript."
+---
+
+Start with a wrapped client from the [TypeScript quickstart](/typescript/quickstart). Set `ANTHROPIC_MODEL` to a Claude model your project can use.
+
+~~~ts
+const message = await anthropic.messages.create({
+  model: process.env.ANTHROPIC_MODEL!,
+  max_tokens: 256,
+  messages: [{ role: 'user', content: 'Summarize the release notes.' }],
+});
+~~~
+
+Brello observes `messages.create()`, including `stream: true`, and `messages.stream()`. Keep your existing tool definitions, handlers, and message processing. Brello collects usage metadata for the provider call.
+
+## Track streaming usage
+
+Use the original stream helper and listeners:
+
+~~~ts
+const stream = anthropic.messages.stream({
+  model: process.env.ANTHROPIC_MODEL!,
+  max_tokens: 256,
+  messages: [{ role: 'user', content: 'Summarize the release notes.' }],
+});
+
+stream.on('text', (text) => process.stdout.write(text));
+const message = await stream.finalMessage();
+~~~
+
+Anthropic's usage updates are cumulative. Brello combines the initial and final metadata without adding the same tokens twice. Using both the iterator and the final-message helper for one stream yields a single event. If final counts are unavailable, the event carries `usage: null`.
+
+## Understand cache usage
+
+Brello combines uncached input, cache reads, and cache creation to calculate total input tokens. It preserves the five-minute and one-hour cache creation breakdown when supplied. A cache-write breakdown that the SDK cannot classify produces unknown usage. The current server accepts one-hour cache counts and reports their cost as unpriced.

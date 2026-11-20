@@ -1,0 +1,76 @@
+---
+title: "Configuration and delivery"
+description: "Set runtime options, add per-call context, and flush buffered events."
+---
+
+Pass options to `new Brello({ apiKey, options })`. Explicit options take precedence over environment variables.
+
+| Option | Environment variable | Behavior |
+| --- | --- | --- |
+| `apiKey` | `BRELLO_API_KEY` | Project ingestion key |
+| `options.apiBaseUrl` | `BRELLO_API_BASE_URL` | Optional self-hosted API URL. Defaults to `https://api.brello.app/v1` |
+| `options.environment` | `BRELLO_ENV` | Optional key check. `prod` or `live` expects a live key. `staging` or `test` expects a test key |
+| `options.serviceName` | `BRELLO_SERVICE_NAME` | Adds a `serviceName` attribute when the project collects attributes |
+| `options.enabled` | `BRELLO_ENABLED` | Use `false` or `0` in the environment to disable delivery |
+| `options.debug` | `BRELLO_DEBUG` | Use `true` or `1` in the environment to log event metadata and delivery outcomes |
+| `options.hashEndUserId` | | Sends a project-scoped HMAC when the project supplies hashing configuration |
+| `options.debugIncludeContext` | | With debug enabled, includes the actual user and attribute fields in logs. Use only with local test data |
+
+An environment mismatch disables delivery while the provider client continues serving requests. Debug output masks user IDs and attributes by default.
+
+## Connect to self-hosted Brello
+
+Set the URL of your Brello API, including its `/v1` prefix:
+
+~~~bash
+export BRELLO_API_BASE_URL="https://brello-api.example.com/v1"
+~~~
+
+You can also pass `options.apiBaseUrl` when constructing the client. Use HTTPS for self-hosted deployments. Local loopback development can use `http://localhost:8000/v1`.
+
+## Attribute usage to users and features
+
+Use `withContext()` for a single call or a block of async calls:
+
+~~~ts
+const response = await brello.withContext(
+  {
+    endUser: { id: 'user_123' },
+    feature: 'summarize',
+    attributes: { plan: 'pro' },
+  },
+  () => openai.responses.create({
+    model: process.env.OPENAI_MODEL!,
+    input: 'Summarize the release notes.',
+  }),
+);
+~~~
+
+Pass defaults as the second argument to `wrap(client, defaults)`. Set `endUser: false` or `attributes: false` in a context to omit the corresponding fields. Brello sends user and attribute fields when the project configuration enables them. When hashing is enabled, the SDK omits the user until [configuration](/api-reference/config) supplies the HMAC settings.
+
+Send application user IDs and allowlisted attributes. Brello collects usage metadata without reading prompts, output text, tool arguments or results, or embedding vectors. See [privacy and collection settings](/guides/privacy).
+
+## Batch and flush events
+
+The SDK starts a delivery after 20 events or about two seconds. It holds up to 500 events or 2 MiB of serialized events, including the batch in flight. When the buffer fills, the SDK evicts older pending events. Events expire after 60 seconds.
+
+Retries reuse the original event UUID. For `429`, the SDK honors `Retry-After` and discards expired events. After three consecutive ingestion failures caused by a network error, timeout, or HTTP `5xx`, the SDK pauses delivery for 30 seconds. The next batch tests recovery. Continued failures increase the pause with jitter, up to five minutes. A rejected project key pauses delivery for that client. Provider calls continue during these pauses.
+
+Use `await brello.flush()` during Node.js shutdown or before a short-lived script exits. The default wait is five seconds. Call `brello.flush(timeoutMs)` to use a different deadline. A flush can return earlier if delivery is paused beyond that deadline. Check **Connected** in project settings to confirm that the worker has stored an event.
+
+## Use Cloudflare Workers
+
+Enable Node.js compatibility and pass the Worker secret binding as `apiKey`:
+
+~~~ts
+const brello = new Brello({
+  apiKey: env.BRELLO_API_KEY,
+});
+
+// After your provider call or stream completes:
+ctx.waitUntil(brello.flush());
+~~~
+
+For streaming responses, register the flush when the work that consumes the provider stream finishes. On other serverless platforms, use the runtime's background-task hook or await the flush before ending the invocation.
+
+If you're self-hosting Brello, pass your Worker URL binding through `options.apiBaseUrl`.

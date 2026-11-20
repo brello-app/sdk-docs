@@ -1,0 +1,52 @@
+---
+title: "Python quickstart"
+description: "Wrap your OpenAI or Anthropic Python client and send your first usage event."
+---
+
+Use Python 3.10 or newer and a Brello [project ingestion key](/guides/authentication). Keep your provider's API key configured separately.
+
+## Install the SDK
+
+From the root of the Python SDK checkout, install `brello-sdk` into your application's environment. The package imports as `brello`.
+
+~~~bash
+python -m pip install .
+~~~
+
+Keep your application's `openai` or `anthropic` dependency. Set your project key on the server:
+
+~~~bash
+export BRELLO_API_KEY="YOUR_BRELLO_PROJECT_KEY"
+~~~
+
+The SDK sends events to `https://api.brello.app/v1` by default. If you run Brello yourself, [set your self-hosted API URL](/python/configuration#connect-to-self-hosted-brello).
+
+## Wrap your client
+
+<CodeGroup>
+~~~python OpenAI
+from brello import Brello
+from openai import OpenAI
+
+brello = Brello()
+client = brello.wrap(OpenAI())
+~~~
+
+~~~python Anthropic
+from anthropic import Anthropic
+from brello import Brello
+
+brello = Brello()
+client = brello.wrap(Anthropic())
+~~~
+</CodeGroup>
+
+Reuse one `Brello` instance per process. For async code, wrap `AsyncOpenAI()` or `AsyncAnthropic()` and keep awaiting your existing calls.
+
+## Verify the connection
+
+Make a provider call with the wrapped client, or finish consuming a stream. If your test script exits immediately afterward, call `brello.flush()` from sync code or `await brello.aflush()` from async code.
+
+In Brello, open your project's **Settings** and look for **Connected** under SDK activity. The status appears after the worker stores an event.
+
+See the [OpenAI guide](/python/openai), [Anthropic guide](/python/anthropic), or [configuration and delivery](/python/configuration) for examples.

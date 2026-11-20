@@ -3,14 +3,15 @@ title: "Quickstart"
 description: "Verify a project key and send a sample usage event."
 ---
 
-You need a Brello project API key, your API deployment URL, and a shell with `curl`. The local backend defaults to port 8000. For a hosted deployment, replace the origin while keeping `/v1`.
+If you already use an OpenAI or Anthropic client, see the [TypeScript quickstart](/typescript/quickstart) or [Python quickstart](/python/quickstart).
+
+You need a Brello project ingestion key and a shell with `curl`. These examples use the hosted API. If you run Brello yourself, substitute your deployment's origin and keep `/v1`.
 
 <Steps>
   <Step title="Set your environment">
     Run these commands in Bash or Zsh. Use a test project key for the sample event.
 
     ~~~bash
-    export BRELLO_API_BASE_URL="http://localhost:8000/v1"
     export BRELLO_API_KEY="YOUR_PROJECT_API_KEY"
     ~~~
   </Step>
@@ -18,7 +19,7 @@ You need a Brello project API key, your API deployment URL, and a shell with `cu
     ~~~bash
     curl --silent --show-error --output /dev/null --write-out '%{http_code}\n' \
       --header "Authorization: Bearer $BRELLO_API_KEY" \
-      "$BRELLO_API_BASE_URL/config"
+      "https://api.brello.app/v1/config"
     ~~~
 
     A `200` response verifies the project key. This example prints only the status because the response can include a project identity secret. See [configuration](/api-reference/config) for the available fields.
@@ -27,7 +28,7 @@ You need a Brello project API key, your API deployment URL, and a shell with `cu
     Replace the timestamp with the completed-attempt time and generate a fresh UUID for every new event.
 
     ~~~bash
-    curl "$BRELLO_API_BASE_URL/events" \
+    curl "https://api.brello.app/v1/events" \
       --request POST \
       --header "Authorization: Bearer $BRELLO_API_KEY" \
       --header "Content-Type: application/json" \
