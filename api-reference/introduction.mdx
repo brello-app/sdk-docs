@@ -1,17 +1,16 @@
 ---
 title: "API overview"
-description: "Explore ingestion, scoped reads, project management, and signed webhook events."
+description: "Explore SDK ingestion, scoped reads, and signed outbound webhooks."
 ---
 
 The [Brello Public API specification](/openapi.json) is version `1.0.0-beta.3` and uses OpenAPI `3.1.0`. Fetch it from a running backend at `GET /v1/openapi-public.json`. SDK tooling can still fetch the ingestion-only OpenAPI 3.0 document at `GET /v1/openapi.json`.
 
-The hosted API origin is `https://api.brello.app`. For self-hosted Brello, use your deployment's origin. Local development uses `http://localhost:8000` by default. The OpenAPI document uses relative server URLs.
+The hosted public API base URL is `https://api.brello.app/v1`. For self-hosted Brello, use your deployment's origin and keep `/v1`. Local development uses `http://localhost:8000` by default.
 
 | Area | Base path or destination | Authentication |
 | --- | --- | --- |
 | [SDK ingestion](/api-reference/events) and [configuration](/api-reference/config) | `/v1` | Project ingestion key |
 | [Spend](/api-reference/spend), [end users](/api-reference/end-users), and [reports](/api-reference/reports) | `/v1` | Scoped project read key |
-| [Read keys](/api-reference/list-api-keys) and [subscriptions](/api-reference/list-webhook-subscriptions) | `/api` | Organization owner dashboard access JWT |
 | [Outgoing webhooks](/guides/webhooks) | Your configured HTTPS endpoint | Brello signature verified with the destination secret |
 
 For SDK ingestion, see the [quickstart](/quickstart) and [retry guide](/guides/errors). For read queries, see [filters and pagination](/guides/read-api).

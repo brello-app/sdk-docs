@@ -3,7 +3,7 @@ title: "Query usage and reports"
 description: "Use scoped project keys to read estimated spend, end-user usage, and weekly reports."
 ---
 
-An organization owner can [create a project read key](/api-reference/create-api-key) using a dashboard access JWT. Choose the scopes the integration needs. Keys expire after 90 days by default. You can set an expiry of 1 to 365 days. Store the returned `brl_read_` secret when you create the key.
+Get a project read key from an organization owner. The key starts with `brl_read_` and needs the scopes your integration uses. Read keys expire after 90 days by default and can have a lifetime of 1 to 365 days.
 
 | Query | Scope |
 | --- | --- |

@@ -1,13 +1,12 @@
 ---
 title: "Authentication"
-description: "Choose the credential for ingestion, read queries, or project management."
+description: "Choose a project credential for SDK ingestion or public read queries."
 ---
 
 | Operation | Bearer credential |
 | --- | --- |
 | Send SDK events or fetch SDK configuration under `/v1` | Project ingestion key |
 | Query spend, end users, or reports under `/v1` | Project read key with the [required scope](/guides/read-api) |
-| Manage read keys or webhook subscriptions under `/api` | Dashboard access JWT from an organization owner |
 
 For ingestion and configuration, send your complete project key in the `Authorization` header.
 

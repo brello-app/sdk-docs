@@ -11,19 +11,48 @@ description: "Subscribe to report and alert events and verify incoming signature
 
 ## Set up a destination
 
-1. Use an organization owner's dashboard access JWT to send `POST /api/organizations/{organizationId}/notifications/destinations` with the JSON body below. Use a public HTTPS URL on port 443. Brello does not follow redirects.
-2. Save the returned `signingSecret` immediately. Brello returns it only when you create the destination.
-3. Use the returned destination ID to [set a project subscription](/api-reference/set-webhook-subscription). Send an `eventTypes` array containing the events you want to receive. Keep the destination enabled.
+1. In your organization's **Notifications** settings, add a webhook destination under **Email and webhooks**. Enter your receiver's HTTPS URL on port 443. It must resolve to a public IPv4 address.
+2. Save the signing secret when Brello displays it. It is shown once. Store it on your receiver as a server-side secret.
+3. The destination must be enabled and have an active subscription to the selected events for the project. Creating the destination alone does not subscribe it to those events.
 
-~~~json
+Delivery starts for new matching events after the subscription is activated.
+
+## How Brello sends a webhook
+
+When a subscribed event occurs, Brello sends a `POST` directly to your destination URL with `Content-Type: application/json`. The body contains `event`, `eventId`, `occurredAt`, and `data`. The `data` shape depends on the event listed above. Brello does not follow redirects.
+
+~~~http
+POST /hooks/brello HTTP/1.1
+Host: example.com
+Content-Type: application/json
+Brello-Event-Id: 7efe3c76-3a95-4da3-98d5-b0e70026b6b7
+Brello-Timestamp: <Unix seconds at delivery>
+Brello-Signature: v1=<64-character lowercase hex digest>
+
 {
-  "channel": "webhook",
-  "label": "My service",
-  "target": "https://example.com/hooks/brello"
+  "event": "alert.abuse",
+  "eventId": "7efe3c76-3a95-4da3-98d5-b0e70026b6b7",
+  "occurredAt": "2026-11-21T03:15:00Z",
+  "data": {
+    "projectId": "81660914-6c64-4e4e-81ba-39a8f344d68f",
+    "alertId": "bded491d-7fee-4337-bf06-e3363fbb1e5b",
+    "endUserId": "74b63c80-50cb-40ff-8497-bd0d706a3218",
+    "externalUserId": "user_123",
+    "rule": "limit",
+    "currency": "USD",
+    "amountMicros": "2400000",
+    "thresholdMicros": "1000000",
+    "period": {
+      "from": "2026-11-21",
+      "to": "2026-11-22",
+      "timeZone": "UTC",
+      "endExclusive": true
+    }
+  }
 }
 ~~~
 
-Brello starts delivering new matching events after activation. Updating a subscription resets activation and cancels pending deliveries under its previous settings. Send an empty `eventTypes` array to disable the subscription.
+The timestamp and signature above are placeholders. In a real delivery, Brello signs the exact bytes it sends, which may have different whitespace from this example.
 
 ## Verify incoming requests
 
@@ -36,7 +65,7 @@ Brello starts delivering new matching events after activation. Updating a subscr
 1. Read the raw request body before parsing JSON. Reject timestamps more than 300 seconds ahead of or behind your clock.
 2. Compute HMAC-SHA256 over the timestamp header, a literal period, and the exact raw UTF-8 body bytes. Use the `signingSecret` string as the HMAC key without Base64URL decoding it.
 3. Compare the lowercase hex digest to the value after `v1=` using a constant-time comparison. Reject requests if the signature fails verification.
-4. Parse the verified body and check that its `eventId` matches `Brello-Event-Id`. Deduplicate using the body’s `eventId`. Return `2xx` once you have durably accepted that event ID, including when you receive it again.
+4. Parse the verified body and check that its `eventId` matches `Brello-Event-Id`. Deduplicate using `eventId`. Return `2xx` after durably accepting the event and when you receive the same event again.
 
 ## Handle retries
 
