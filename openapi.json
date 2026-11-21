@@ -5,11 +5,7 @@
     "version": "1.0.0-beta.3",
     "description": "Public SDK ingestion, scoped read endpoints, API key lifecycle, and outgoing signed webhooks. Read spend is SDK estimated cost; it is not a complete provider invoice. SDK content is not collected."
   },
-  "servers": [
-    {
-      "url": "/v1"
-    }
-  ],
+  "servers": [{ "url": "https://api.brello.app/v1" }],
   "components": {
     "securitySchemes": {
       "projectKey": {
@@ -42,20 +38,13 @@
           },
           "event": {
             "type": "string",
-            "enum": [
-              "report.ready"
-            ]
+            "enum": ["report.ready"]
           },
           "data": {
             "$ref": "#/components/schemas/WeeklyReport"
           }
         },
-        "required": [
-          "eventId",
-          "occurredAt",
-          "event",
-          "data"
-        ]
+        "required": ["eventId", "occurredAt", "event", "data"]
       },
       "WeeklyReport": {
         "type": "object",
@@ -81,23 +70,14 @@
               },
               "timeZone": {
                 "type": "string",
-                "enum": [
-                  "UTC"
-                ]
+                "enum": ["UTC"]
               },
               "endExclusive": {
                 "type": "boolean",
-                "enum": [
-                  true
-                ]
+                "enum": [true]
               }
             },
-            "required": [
-              "from",
-              "to",
-              "timeZone",
-              "endExclusive"
-            ]
+            "required": ["from", "to", "timeZone", "endExclusive"]
           },
           "createdAt": {
             "type": "string",
@@ -132,15 +112,11 @@
         "properties": {
           "currency": {
             "type": "string",
-            "enum": [
-              "USD"
-            ]
+            "enum": ["USD"]
           },
           "costSource": {
             "type": "string",
-            "enum": [
-              "sdk_estimate"
-            ]
+            "enum": ["sdk_estimate"]
           },
           "requestCount": {
             "type": "string",
@@ -151,10 +127,7 @@
             "pattern": "^\\d+$"
           },
           "estimatedCostMicros": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "pattern": "^\\d+$"
           },
           "unpricedRequestCount": {
@@ -184,9 +157,7 @@
           },
           "event": {
             "type": "string",
-            "enum": [
-              "alert.abuse"
-            ]
+            "enum": ["alert.abuse"]
           },
           "data": {
             "type": "object",
@@ -204,23 +175,15 @@
                 "format": "uuid"
               },
               "externalUserId": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "rule": {
                 "type": "string",
-                "enum": [
-                  "median",
-                  "limit"
-                ]
+                "enum": ["median", "limit"]
               },
               "currency": {
                 "type": "string",
-                "enum": [
-                  "USD"
-                ]
+                "enum": ["USD"]
               },
               "amountMicros": {
                 "type": "string",
@@ -243,23 +206,14 @@
                   },
                   "timeZone": {
                     "type": "string",
-                    "enum": [
-                      "UTC"
-                    ]
+                    "enum": ["UTC"]
                   },
                   "endExclusive": {
                     "type": "boolean",
-                    "enum": [
-                      true
-                    ]
+                    "enum": [true]
                   }
                 },
-                "required": [
-                  "from",
-                  "to",
-                  "timeZone",
-                  "endExclusive"
-                ]
+                "required": ["from", "to", "timeZone", "endExclusive"]
               }
             },
             "required": [
@@ -275,12 +229,7 @@
             ]
           }
         },
-        "required": [
-          "eventId",
-          "occurredAt",
-          "event",
-          "data"
-        ]
+        "required": ["eventId", "occurredAt", "event", "data"]
       },
       "ModelChangeWebhook": {
         "type": "object",
@@ -295,9 +244,7 @@
           },
           "event": {
             "type": "string",
-            "enum": [
-              "alert.model_change"
-            ]
+            "enum": ["alert.model_change"]
           },
           "data": {
             "type": "object",
@@ -323,16 +270,10 @@
                 "type": "string"
               },
               "sourceUrl": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "effectiveAt": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "modelIds": {
                 "type": "array",
@@ -369,12 +310,7 @@
             ]
           }
         },
-        "required": [
-          "eventId",
-          "occurredAt",
-          "event",
-          "data"
-        ]
+        "required": ["eventId", "occurredAt", "event", "data"]
       },
       "BatchReceipt": {
         "type": "object",
@@ -415,9 +351,7 @@
             ]
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "RejectedEvent": {
         "type": "object",
@@ -433,10 +367,7 @@
           },
           "code": {
             "type": "string",
-            "enum": [
-              "INVALID_EVENT",
-              "EVENT_TOO_LARGE"
-            ]
+            "enum": ["INVALID_EVENT", "EVENT_TOO_LARGE"]
           },
           "issues": {
             "type": "array",
@@ -445,11 +376,7 @@
             }
           }
         },
-        "required": [
-          "index",
-          "code",
-          "issues"
-        ]
+        "required": ["index", "code", "issues"]
       },
       "ValidationIssue": {
         "type": "object",
@@ -461,10 +388,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "path",
-          "code"
-        ]
+        "required": ["path", "code"]
       },
       "ApiError": {
         "type": "object",
@@ -482,25 +406,17 @@
                 "type": "string"
               }
             },
-            "required": [
-              "code",
-              "message",
-              "requestId"
-            ]
+            "required": ["code", "message", "requestId"]
           }
         },
-        "required": [
-          "error"
-        ]
+        "required": ["error"]
       },
       "EventBatch": {
         "type": "object",
         "properties": {
           "schemaVersion": {
             "type": "string",
-            "enum": [
-              "1"
-            ]
+            "enum": ["1"]
           },
           "sdk": {
             "$ref": "#/components/schemas/SdkInfo"
@@ -514,11 +430,7 @@
             "maxItems": 50
           }
         },
-        "required": [
-          "schemaVersion",
-          "sdk",
-          "events"
-        ],
+        "required": ["schemaVersion", "sdk", "events"],
         "additionalProperties": false,
         "description": "Events are validated independently for partial acceptance. Body limits are UTF-8 bytes. Authenticated project and environment are never taken from this payload."
       },
@@ -541,10 +453,7 @@
             "maxLength": 128
           }
         },
-        "required": [
-          "name",
-          "version"
-        ],
+        "required": ["name", "version"],
         "additionalProperties": false
       },
       "LlmRequestEvent": {
@@ -556,9 +465,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "llm.request"
-            ]
+            "enum": ["llm.request"]
           },
           "occurredAt": {
             "type": "string",
@@ -585,11 +492,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "success",
-              "error",
-              "cancelled"
-            ]
+            "enum": ["success", "error", "cancelled"]
           },
           "providerKey": {
             "$ref": "#/components/schemas/ProviderKeyReference"
@@ -620,11 +523,7 @@
             "properties": {
               "mode": {
                 "type": "string",
-                "enum": [
-                  "standard",
-                  "batch",
-                  "unknown"
-                ]
+                "enum": ["standard", "batch", "unknown"]
               },
               "serviceTier": {
                 "type": "string",
@@ -689,19 +588,14 @@
             "properties": {
               "algorithm": {
                 "type": "string",
-                "enum": [
-                  "sha256"
-                ]
+                "enum": ["sha256"]
               },
               "value": {
                 "type": "string",
                 "pattern": "^[a-f0-9]{64}$"
               }
             },
-            "required": [
-              "algorithm",
-              "value"
-            ],
+            "required": ["algorithm", "value"],
             "additionalProperties": false
           },
           "hint": {
@@ -709,10 +603,7 @@
             "properties": {
               "format": {
                 "type": "string",
-                "enum": [
-                  "openai-redacted-v1",
-                  "anthropic-redacted-v1"
-                ]
+                "enum": ["openai-redacted-v1", "anthropic-redacted-v1"]
               },
               "value": {
                 "type": "string",
@@ -720,16 +611,11 @@
                 "pattern": "^[A-Za-z0-9_-]{3,32}(?:\\.\\.\\.|…)[A-Za-z0-9_-]{3,12}$"
               }
             },
-            "required": [
-              "format",
-              "value"
-            ],
+            "required": ["format", "value"],
             "additionalProperties": false
           }
         },
-        "required": [
-          "fingerprint"
-        ],
+        "required": ["fingerprint"],
         "additionalProperties": false,
         "description": "SHA-256 fingerprint of the provider secret, never the secret itself. A redacted hint is optional and is only a heuristic matching signal."
       },
@@ -760,14 +646,10 @@
         "additionalProperties": false,
         "anyOf": [
           {
-            "required": [
-              "id"
-            ]
+            "required": ["id"]
           },
           {
-            "required": [
-              "name"
-            ]
+            "required": ["name"]
           }
         ],
         "description": "Application user ID and/or display name. IDs are project-scoped, case-sensitive and not trimmed. Names alone form a separate identity namespace and are not automatically merged with IDs."
@@ -781,9 +663,7 @@
           },
           "algorithm": {
             "type": "string",
-            "enum": [
-              "hmac-sha256"
-            ]
+            "enum": ["hmac-sha256"]
           },
           "keyVersion": {
             "type": "string",
@@ -791,19 +671,12 @@
             "maxLength": 32
           }
         },
-        "required": [
-          "idHash",
-          "algorithm",
-          "keyVersion"
-        ],
+        "required": ["idHash", "algorithm", "keyVersion"],
         "additionalProperties": false,
         "description": "Legacy project-scoped HMAC identity. It is kept separate from supplied IDs and names."
       },
       "TokenUsage": {
-        "type": [
-          "object",
-          "null"
-        ],
+        "type": ["object", "null"],
         "properties": {
           "inputTokens": {
             "type": "integer",
@@ -839,10 +712,7 @@
             "additionalProperties": false
           }
         },
-        "required": [
-          "inputTokens",
-          "outputTokens"
-        ],
+        "required": ["inputTokens", "outputTokens"],
         "additionalProperties": false,
         "description": "Null means unknown usage, never zero cost."
       },
@@ -854,9 +724,7 @@
             "properties": {
               "schemaVersion": {
                 "type": "string",
-                "enum": [
-                  "1"
-                ]
+                "enum": ["1"]
               },
               "configVersion": {
                 "type": "string"
@@ -879,16 +747,10 @@
                   },
                   "environment": {
                     "type": "string",
-                    "enum": [
-                      "live",
-                      "test"
-                    ]
+                    "enum": ["live", "test"]
                   }
                 },
-                "required": [
-                  "id",
-                  "environment"
-                ]
+                "required": ["id", "environment"]
               },
               "collection": {
                 "type": "object",
@@ -904,9 +766,7 @@
                   },
                   "contentCollectionSupported": {
                     "type": "boolean",
-                    "enum": [
-                      false
-                    ]
+                    "enum": [false]
                   }
                 },
                 "required": [
@@ -935,32 +795,21 @@
                     "maximum": 9007199254740991
                   }
                 },
-                "required": [
-                  "maxBatchEvents",
-                  "maxBatchBytes",
-                  "maxEventBytes"
-                ]
+                "required": ["maxBatchEvents", "maxBatchBytes", "maxEventBytes"]
               },
               "identity": {
                 "type": "object",
                 "properties": {
                   "endUser": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": ["object", "null"],
                     "properties": {
                       "algorithm": {
                         "type": "string",
-                        "enum": [
-                          "hmac-sha256"
-                        ]
+                        "enum": ["hmac-sha256"]
                       },
                       "secretEncoding": {
                         "type": "string",
-                        "enum": [
-                          "base64url"
-                        ]
+                        "enum": ["base64url"]
                       },
                       "keyVersion": {
                         "type": "string"
@@ -970,9 +819,7 @@
                       },
                       "domain": {
                         "type": "string",
-                        "enum": [
-                          "brello:end-user:v1"
-                        ]
+                        "enum": ["brello:end-user:v1"]
                       }
                     },
                     "required": [
@@ -984,9 +831,7 @@
                     ]
                   }
                 },
-                "required": [
-                  "endUser"
-                ]
+                "required": ["endUser"]
               }
             },
             "required": [
@@ -1001,9 +846,7 @@
             ]
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "PublicApiError": {
         "type": "object",
@@ -1021,16 +864,10 @@
                 "type": "string"
               }
             },
-            "required": [
-              "code",
-              "message",
-              "requestId"
-            ]
+            "required": ["code", "message", "requestId"]
           }
         },
-        "required": [
-          "error"
-        ]
+        "required": ["error"]
       },
       "PublicApiKeyMetadata": {
         "type": "object",
@@ -1050,11 +887,7 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": [
-                "spend:read",
-                "reports:read",
-                "end_users:read"
-              ]
+              "enum": ["spend:read", "reports:read", "end_users:read"]
             }
           },
           "keyLastFour": {
@@ -1067,16 +900,10 @@
             "type": "string"
           },
           "revokedAt": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "lastUsedAt": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
         "required": [
@@ -1103,11 +930,7 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": [
-                "spend:read",
-                "reports:read",
-                "end_users:read"
-              ]
+              "enum": ["spend:read", "reports:read", "end_users:read"]
             },
             "minItems": 1,
             "maxItems": 3
@@ -1119,10 +942,7 @@
             "default": 90
           }
         },
-        "required": [
-          "name",
-          "scopes"
-        ],
+        "required": ["name", "scopes"],
         "additionalProperties": false
       },
       "WebhookSubscription": {
@@ -1140,23 +960,14 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": [
-                "report.ready",
-                "alert.abuse",
-                "alert.model_change"
-              ]
+              "enum": ["report.ready", "alert.abuse", "alert.model_change"]
             }
           },
           "activatedAt": {
             "type": "string"
           }
         },
-        "required": [
-          "projectId",
-          "destinationId",
-          "eventTypes",
-          "activatedAt"
-        ]
+        "required": ["projectId", "destinationId", "eventTypes", "activatedAt"]
       }
     },
     "parameters": {}
@@ -1165,9 +976,7 @@
     "/events": {
       "post": {
         "operationId": "sendEvents",
-        "tags": [
-          "Events"
-        ],
+        "tags": ["Events"],
         "security": [
           {
             "projectKey": []
@@ -1290,9 +1099,7 @@
     "/config": {
       "get": {
         "operationId": "getConfig",
-        "tags": [
-          "Config"
-        ],
+        "tags": ["Config"],
         "security": [
           {
             "projectKey": []
@@ -1365,9 +1172,7 @@
     "/spend": {
       "get": {
         "operationId": "getSpend",
-        "tags": [
-          "Spend"
-        ],
+        "tags": ["Spend"],
         "security": [
           {
             "publicApiKey": []
@@ -1397,11 +1202,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "all",
-                "live",
-                "test"
-              ],
+              "enum": ["all", "live", "test"],
               "default": "all"
             },
             "required": false,
@@ -1411,10 +1212,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "openai",
-                "anthropic"
-              ]
+              "enum": ["openai", "anthropic"]
             },
             "required": false,
             "name": "provider",
@@ -1498,10 +1296,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "maximum": 10000,
               "default": 0
@@ -1539,31 +1334,18 @@
                             },
                             "timeZone": {
                               "type": "string",
-                              "enum": [
-                                "UTC"
-                              ]
+                              "enum": ["UTC"]
                             },
                             "endExclusive": {
                               "type": "boolean",
-                              "enum": [
-                                true
-                              ]
+                              "enum": [true]
                             }
                           },
-                          "required": [
-                            "from",
-                            "to",
-                            "timeZone",
-                            "endExclusive"
-                          ]
+                          "required": ["from", "to", "timeZone", "endExclusive"]
                         },
                         "environment": {
                           "type": "string",
-                          "enum": [
-                            "all",
-                            "live",
-                            "test"
-                          ]
+                          "enum": ["all", "live", "test"]
                         },
                         "groupBy": {
                           "type": "string",
@@ -1592,15 +1374,10 @@
                                 "type": "object",
                                 "properties": {
                                   "dimension": {
-                                    "type": [
-                                      "string",
-                                      "null"
-                                    ]
+                                    "type": ["string", "null"]
                                   }
                                 },
-                                "required": [
-                                  "dimension"
-                                ]
+                                "required": ["dimension"]
                               }
                             ]
                           }
@@ -1618,11 +1395,7 @@
                               "type": "boolean"
                             }
                           },
-                          "required": [
-                            "limit",
-                            "offset",
-                            "hasMore"
-                          ]
+                          "required": ["limit", "offset", "hasMore"]
                         }
                       },
                       "required": [
@@ -1635,9 +1408,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -1732,9 +1503,7 @@
     "/end-users": {
       "get": {
         "operationId": "listEndUsers",
-        "tags": [
-          "End users"
-        ],
+        "tags": ["End users"],
         "security": [
           {
             "publicApiKey": []
@@ -1764,11 +1533,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "all",
-                "live",
-                "test"
-              ],
+              "enum": ["all", "live", "test"],
               "default": "all"
             },
             "required": false,
@@ -1778,10 +1543,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "openai",
-                "anthropic"
-              ]
+              "enum": ["openai", "anthropic"]
             },
             "required": false,
             "name": "provider",
@@ -1847,10 +1609,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "maximum": 10000,
               "default": 0
@@ -1888,31 +1647,18 @@
                             },
                             "timeZone": {
                               "type": "string",
-                              "enum": [
-                                "UTC"
-                              ]
+                              "enum": ["UTC"]
                             },
                             "endExclusive": {
                               "type": "boolean",
-                              "enum": [
-                                true
-                              ]
+                              "enum": [true]
                             }
                           },
-                          "required": [
-                            "from",
-                            "to",
-                            "timeZone",
-                            "endExclusive"
-                          ]
+                          "required": ["from", "to", "timeZone", "endExclusive"]
                         },
                         "environment": {
                           "type": "string",
-                          "enum": [
-                            "all",
-                            "live",
-                            "test"
-                          ]
+                          "enum": ["all", "live", "test"]
                         },
                         "users": {
                           "type": "array",
@@ -1929,24 +1675,14 @@
                                     "format": "uuid"
                                   },
                                   "externalId": {
-                                    "type": [
-                                      "string",
-                                      "null"
-                                    ]
+                                    "type": ["string", "null"]
                                   },
                                   "name": {
-                                    "type": [
-                                      "string",
-                                      "null"
-                                    ]
+                                    "type": ["string", "null"]
                                   },
                                   "identityKind": {
                                     "type": "string",
-                                    "enum": [
-                                      "id",
-                                      "name",
-                                      "hash"
-                                    ]
+                                    "enum": ["id", "name", "hash"]
                                   }
                                 },
                                 "required": [
@@ -1972,11 +1708,7 @@
                               "type": "boolean"
                             }
                           },
-                          "required": [
-                            "limit",
-                            "offset",
-                            "hasMore"
-                          ]
+                          "required": ["limit", "offset", "hasMore"]
                         }
                       },
                       "required": [
@@ -1988,9 +1720,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2085,9 +1815,7 @@
     "/reports": {
       "get": {
         "operationId": "listReports",
-        "tags": [
-          "Reports"
-        ],
+        "tags": ["Reports"],
         "security": [
           {
             "publicApiKey": []
@@ -2109,10 +1837,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "maximum": 10000,
               "default": 0
@@ -2152,22 +1877,13 @@
                               "type": "boolean"
                             }
                           },
-                          "required": [
-                            "limit",
-                            "offset",
-                            "hasMore"
-                          ]
+                          "required": ["limit", "offset", "hasMore"]
                         }
                       },
-                      "required": [
-                        "reports",
-                        "pagination"
-                      ]
+                      "required": ["reports", "pagination"]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2262,9 +1978,7 @@
     "/reports/latest": {
       "get": {
         "operationId": "getLatestReport",
-        "tags": [
-          "Reports"
-        ],
+        "tags": ["Reports"],
         "security": [
           {
             "publicApiKey": []
@@ -2283,9 +1997,7 @@
                       "$ref": "#/components/schemas/WeeklyReport"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2380,9 +2092,7 @@
     "/reports/{reportId}": {
       "get": {
         "operationId": "getReport",
-        "tags": [
-          "Reports"
-        ],
+        "tags": ["Reports"],
         "security": [
           {
             "publicApiKey": []
@@ -2412,9 +2122,7 @@
                       "$ref": "#/components/schemas/WeeklyReport"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2509,9 +2217,7 @@
     "/reports/{reportId}/pdf": {
       "get": {
         "operationId": "downloadReportPdf",
-        "tags": [
-          "Reports"
-        ],
+        "tags": ["Reports"],
         "security": [
           {
             "publicApiKey": []
@@ -2637,9 +2343,7 @@
           }
         ],
         "operationId": "listPublicApiKeys",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "security": [
           {
             "dashboardSession": []
@@ -2673,9 +2377,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2773,9 +2475,7 @@
           }
         ],
         "operationId": "createPublicApiKey",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "security": [
           {
             "dashboardSession": []
@@ -2822,15 +2522,10 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "key",
-                        "secret"
-                      ]
+                      "required": ["key", "secret"]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2930,9 +2625,7 @@
           }
         ],
         "operationId": "revokePublicApiKey",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "security": [
           {
             "dashboardSession": []
@@ -2972,9 +2665,7 @@
                       "$ref": "#/components/schemas/PublicApiKeyMetadata"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3074,9 +2765,7 @@
           }
         ],
         "operationId": "listWebhookSubscriptions",
-        "tags": [
-          "Webhooks"
-        ],
+        "tags": ["Webhooks"],
         "security": [
           {
             "dashboardSession": []
@@ -3109,9 +2798,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3211,9 +2898,7 @@
           }
         ],
         "operationId": "setWebhookSubscription",
-        "tags": [
-          "Webhooks"
-        ],
+        "tags": ["Webhooks"],
         "security": [
           {
             "dashboardSession": []
@@ -3261,9 +2946,7 @@
                     "maxItems": 3
                   }
                 },
-                "required": [
-                  "eventTypes"
-                ],
+                "required": ["eventTypes"],
                 "additionalProperties": false
               }
             }
@@ -3281,9 +2964,7 @@
                       "$ref": "#/components/schemas/WebhookSubscription"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3380,9 +3061,7 @@
     "report.ready": {
       "post": {
         "operationId": "report_ready",
-        "tags": [
-          "Webhook events"
-        ],
+        "tags": ["Webhook events"],
         "summary": "report.ready",
         "description": "Brello sends this request to subscribed HTTPS destinations. Verify HMAC-SHA256 using the destination secret over timestamp + '.' + the exact raw UTF-8 request body; the v1 signature is lowercase hex. Compare in constant time and reject timestamps more than 300 seconds from your clock. Deduplicate Brello-Event-Id. Return 2xx to acknowledge. Network errors, 429 and 5xx retry with exponential backoff (up to 8 attempts / 23 hours); other statuses fail permanently. Retry timestamps/signatures change; event ID and payload are stable. Subscriptions are opt-in and do not backfill old events.",
         "parameters": [
@@ -3434,9 +3113,7 @@
     "alert.abuse": {
       "post": {
         "operationId": "alert_abuse",
-        "tags": [
-          "Webhook events"
-        ],
+        "tags": ["Webhook events"],
         "summary": "alert.abuse",
         "description": "Brello sends this request to subscribed HTTPS destinations. Verify HMAC-SHA256 using the destination secret over timestamp + '.' + the exact raw UTF-8 request body; the v1 signature is lowercase hex. Compare in constant time and reject timestamps more than 300 seconds from your clock. Deduplicate Brello-Event-Id. Return 2xx to acknowledge. Network errors, 429 and 5xx retry with exponential backoff (up to 8 attempts / 23 hours); other statuses fail permanently. Retry timestamps/signatures change; event ID and payload are stable. Subscriptions are opt-in and do not backfill old events.",
         "parameters": [
@@ -3488,9 +3165,7 @@
     "alert.model_change": {
       "post": {
         "operationId": "alert_model_change",
-        "tags": [
-          "Webhook events"
-        ],
+        "tags": ["Webhook events"],
         "summary": "alert.model_change",
         "description": "Brello sends this request to subscribed HTTPS destinations. Verify HMAC-SHA256 using the destination secret over timestamp + '.' + the exact raw UTF-8 request body; the v1 signature is lowercase hex. Compare in constant time and reject timestamps more than 300 seconds from your clock. Deduplicate Brello-Event-Id. Return 2xx to acknowledge. Network errors, 429 and 5xx retry with exponential backoff (up to 8 attempts / 23 hours); other statuses fail permanently. Retry timestamps/signatures change; event ID and payload are stable. Subscriptions are opt-in and do not backfill old events.",
         "parameters": [
