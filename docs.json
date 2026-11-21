@@ -51,6 +51,7 @@
               "python/quickstart",
               "python/openai",
               "python/anthropic",
+              "python/google",
               "python/configuration"
             ]
           }

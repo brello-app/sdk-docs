@@ -1,9 +1,9 @@
 ---
 title: "Python quickstart"
-description: "Wrap your OpenAI or Anthropic Python client and send your first usage event."
+description: "Wrap your OpenAI, Anthropic, or Google Gen AI Python client and send your first usage event."
 ---
 
-Use Python 3.10 or newer and a Brello [project ingestion key](/guides/authentication). Keep your provider's API key configured separately.
+Use Python 3.10 or newer and a Brello [project ingestion key](/guides/authentication). Configure your provider credentials separately.
 
 ## Install the SDK
 
@@ -13,7 +13,7 @@ From the root of the Python SDK checkout, install `brello-sdk` into your applica
 python -m pip install .
 ~~~
 
-Keep your application's `openai` or `anthropic` dependency. Set your project key on the server:
+Keep your application's `openai`, `anthropic`, or `google-genai` dependency. Set your project key on the server:
 
 ~~~bash
 export BRELLO_API_KEY="YOUR_BRELLO_PROJECT_KEY"
@@ -39,9 +39,39 @@ from brello import Brello
 brello = Brello()
 client = brello.wrap(Anthropic())
 ~~~
+
+~~~python Google AI Studio
+import os
+
+from brello import Brello
+from google import genai
+
+brello = Brello()
+client = brello.wrap(
+    genai.Client(api_key=os.environ["GEMINI_API_KEY"]),
+    provider="google_ai_studio",
+)
+~~~
+
+~~~python Vertex AI
+import os
+
+from brello import Brello
+from google import genai
+
+brello = Brello()
+client = brello.wrap(
+    genai.Client(
+        vertexai=True,
+        project=os.environ["GOOGLE_CLOUD_PROJECT"],
+        location=os.environ["GOOGLE_CLOUD_LOCATION"],
+    ),
+    provider="google_vertex_ai",
+)
+~~~
 </CodeGroup>
 
-Reuse one `Brello` instance per process. For async code, wrap `AsyncOpenAI()` or `AsyncAnthropic()` and keep awaiting your existing calls.
+Reuse one `Brello` instance per process. For async code, wrap `AsyncOpenAI()` or `AsyncAnthropic()`, or use `client.aio` on a wrapped Google client. See the [Google guide](/python/google) for credentials and request examples.
 
 ## Verify the connection
 
@@ -49,4 +79,4 @@ Make a provider call with the wrapped client, or finish consuming a stream. If y
 
 In Brello, open your project's **Settings** and look for **Connected** under SDK activity. The status appears after the worker stores an event.
 
-See the [OpenAI guide](/python/openai), [Anthropic guide](/python/anthropic), or [configuration and delivery](/python/configuration) for examples.
+See the [OpenAI guide](/python/openai), [Anthropic guide](/python/anthropic), [Google guide](/python/google), or [configuration and delivery](/python/configuration) for examples.

@@ -1,0 +1,57 @@
+---
+title: "Google AI Studio and Vertex AI"
+description: "Collect Gemini Developer API and Vertex AI usage with the Python SDK."
+---
+
+Install `google-genai` in your application and create a wrapped `client` using the [Python quickstart](/python/quickstart#wrap-your-client). Pass the provider ID in `wrap()` so Brello can distinguish the two backends.
+
+| Backend | Provider ID | Google credentials |
+| --- | --- | --- |
+| Google AI Studio (Gemini Developer API) | `google_ai_studio` | Set `GEMINI_API_KEY` for the Google client. |
+| Vertex AI | `google_vertex_ai` | Set `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` for the quickstart example. Authenticate the Google client with Application Default Credentials. |
+
+Set `BRELLO_API_KEY` to your Brello project ingestion key. Automatic imports of Google billing data are not yet available.
+
+## Send a request
+
+Set `GEMINI_MODEL` to a model available to your Google backend.
+
+~~~python
+import os
+
+response = client.models.generate_content(
+    model=os.environ["GEMINI_MODEL"],
+    contents="Summarize what this application does.",
+)
+~~~
+
+Use `await client.aio.models.generate_content(...)` for async code. Brello collects the model, available token counts, and a response ID when Google provides one. Your application can read the original response as usual.
+
+## Supported methods
+
+| Method | Usage recorded |
+| --- | --- |
+| `models.generate_content()` | Available input, output, and cached input token counts |
+| `models.generate_content_stream()` | Available final token counts from the consumed stream |
+| `models.embed_content()` | Reported input tokens and zero output tokens when Google returns usable counts |
+
+The same methods are supported on `client.aio.models`. Brello records one event per wrapped SDK method call. The Google client may make additional requests internally. Input totals include tool-use prompt tokens and output totals include thinking tokens when Google reports them. Cached input is included in total input and reported separately as a subset. Brello records `usage: null` when no usable counts are available.
+
+## Track streaming usage
+
+~~~python
+stream = client.models.generate_content_stream(
+    model=os.environ["GEMINI_MODEL"],
+    contents="Summarize the release notes.",
+)
+
+for chunk in stream:
+    if chunk.text:
+        print(chunk.text, end="")
+
+brello.flush()
+~~~
+
+In async code, await `client.aio.models.generate_content_stream(...)`, consume the result with `async for`, and call `await brello.aflush()` before a short-lived script exits. Consume the stream to completion to capture final usage. If you stop early, call `close()` or `await aclose()` to record the cancellation.
+
+See [configuration and delivery](/python/configuration) for user and feature attribution and [privacy and collection](/guides/privacy) for data handling.
