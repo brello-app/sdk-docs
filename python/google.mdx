@@ -35,7 +35,9 @@ Use `await client.aio.models.generate_content(...)` for async code. Brello colle
 | `models.generate_content_stream()` | Available final token counts from the consumed stream |
 | `models.embed_content()` | Reported input tokens and zero output tokens when Google returns usable counts |
 
-The same methods are supported on `client.aio.models`. Brello records one event per wrapped SDK method call. The Google client may make additional requests internally. Input totals include tool-use prompt tokens and output totals include thinking tokens when Google reports them. Cached input is included in total input and reported separately as a subset. Brello records `usage: null` when no usable counts are available.
+The same methods are supported on `client.aio.models`. Brello records one event per wrapped SDK method call. Input totals include tool-use prompt tokens and output totals include thinking tokens when Google reports them. Cached input is included in total input and reported separately as a subset. Brello records `usage: null` when no usable counts are available.
+
+With [automatic function calling](https://googleapis.github.io/python-genai/#automatic-python-function-support), Google can make multiple model requests for one SDK call. For `generate_content()`, Google exposes only the final tool round's usage, so Brello's estimate can omit earlier rounds. For `generate_content_stream()`, Brello sums the final usage from each tool round when Google includes function call history and all observed rounds include usable counts. Keep `ignore_call_history` at its default to identify round boundaries. Without the history, Brello uses the latest reported counts. If an identified round is missing counts, Brello uses `usage: null`.
 
 ## Track streaming usage
 

@@ -24,7 +24,7 @@ with brello.wrap(Anthropic()) as client:
 brello.flush()
 ~~~
 
-Brello observes `messages.create()`, including `stream=True`, and `messages.stream()`. Your existing tools and message handlers continue to receive the provider's results.
+Brello observes `messages.create()`, including `stream=True`, `messages.parse()` for structured outputs, and `messages.stream()`. The same methods are supported on `client.beta.messages`. Your existing tools and message handlers continue to receive the provider's results.
 
 ## Track async Messages streaming
 
@@ -54,4 +54,6 @@ async def main():
 asyncio.run(main())
 ~~~
 
-Brello uses Anthropic's cumulative stream usage to record one event per observed request. Total input includes uncached input, cache reads, and cache creation. Brello preserves the five-minute and one-hour cache creation categories when supplied. A missing final count or a cache write the SDK cannot classify produces `usage: null`.
+Brello uses Anthropic's cumulative stream usage to record one event per observed request. It records Anthropic's `request-id` header when available. If the connection ends before Brello sees `message_stop`, Brello records an error with `usage: null`. Closing the stream early records a cancellation.
+
+Total input includes uncached input, cache reads, and cache creation. Brello estimates five-minute and one-hour cache writes separately at standard tier. A cache write the SDK cannot classify produces `usage: null`. For Priority Tier and Fast mode, Brello records the reported tokens and leaves the cost estimate unavailable.

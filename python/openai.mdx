@@ -26,11 +26,15 @@ brello.flush()
 
 | API | Observed methods |
 | --- | --- |
-| Responses | `responses.create()`, including `stream=True`, and `responses.stream()` |
-| Chat Completions | `chat.completions.create()`, including `stream=True`, and `chat.completions.stream()` |
+| Responses | `responses.create()`, including `stream=True`, `responses.parse()`, and `responses.stream()` |
+| Chat Completions | `chat.completions.create()`, including `stream=True`, `chat.completions.parse()`, and `chat.completions.stream()` |
 | Embeddings | `embeddings.create()` |
 
-For embeddings, Brello records input tokens and zero output tokens. Tool calls through supported methods count as part of the provider request. Brello reads usage metadata and leaves the prompt, output, tool arguments, and embedding vectors in your application.
+For embeddings, Brello records input tokens and zero output tokens. Brello estimates token costs from OpenAI's usage metadata. Separate charges for built-in tools, such as file search calls or Code Interpreter containers, are excluded from the estimate. Brello leaves prompts, outputs, tool arguments, and embedding vectors in your application.
+
+## Track background Responses
+
+For [background Responses](https://developers.openai.com/api/docs/guides/background), poll with `responses.retrieve(response_id)` on the same wrapped client or consume a resumed stream with `responses.stream(response_id=..., starting_after=...)`. Brello records the response once it observes a terminal status. If a different wrapped client resumes the stream, Brello uses that client's current context when it has no record of the original call.
 
 ## Track async Chat Completions streaming
 
@@ -64,4 +68,4 @@ async def main():
 asyncio.run(main())
 ~~~
 
-If final token counts are unavailable, Brello records `usage: null`. With `with_raw_response` or `with_streaming_response`, Brello keeps the body available to your application and records basic request metadata without token usage.
+If final token counts are unavailable, Brello records `usage: null`. Brello captures `x-request-id` from the OpenAI streaming response when available. With `with_raw_response` or `with_streaming_response`, Brello keeps the body available to your application and records basic request metadata without token usage.
